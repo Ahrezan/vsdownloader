@@ -10,7 +10,7 @@ Bu depo aşağıdaki dillerde mevcuttur:
 
 | Dosya        | Açıklama                                   |
 |-------------|--------------------------------------------|
-| [![İndir](https://img.shields.io/badge/İndir-v0.2.7--alpha-blue)](https://github.com/Ahrezan/vsdownloader/releases/download/0.2.7-alpha/VSDSetup-0_2_7-alpha.exe) | En Son (Alpha) Sürüm |
+| [![İndir](https://img.shields.io/badge/İndir-v0.2.7--alpha-blue)](https://github.com/Ahrezan/vsdownloader/releases/download/v0.2.7-alpha/VSDSetup-0_2_7-alpha.exe) | En Son (Alpha) Sürüm |
 
 VSDownloader 5.1, YouTube ve Spotify gibi platformlardan ses ve video içeriği indirmek için tasarlanmış ücretsiz ve açık kaynaklı bir uygulamadır. Şu anda Spotify işlevselliği geliştirme aşamasındadır. Bu araç, kullanıcıların çeşitli format ve kalite seçeneklerinde içerik indirmesini kolaylaştıran kullanıcı dostu bir arayüz ve bir dizi özelleştirilebilir özellik sunar.
 
