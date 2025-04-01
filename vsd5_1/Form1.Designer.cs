@@ -929,7 +929,7 @@
             // lblVersion
             // 
             this.lblVersion.Name = "lblVersion";
-            this.lblVersion.Size = new System.Drawing.Size(1174, 17);
+            this.lblVersion.Size = new System.Drawing.Size(1143, 17);
             this.lblVersion.Spring = true;
             this.lblVersion.Text = "Version";
             this.lblVersion.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -938,7 +938,7 @@
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(85, 17);
-            this.toolStripStatusLabel1.Text = "5.1_0.2.7_alpha";
+            this.toolStripStatusLabel1.Text = "5.1_0.2.8_alpha";
             // 
             // MainForm
             // 
@@ -950,6 +950,7 @@
             this.DrawerIndicatorWidth = 2;
             this.DrawerShowIconsWhenHidden = true;
             this.DrawerTabControl = this.tabControl;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(1280, 720);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;

@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("vsd5_1")]
-[assembly: AssemblyDescription("created GUI by Ahrezan")]
+[assembly: AssemblyTitle("GUI for Video & Sound Downloader")]
+[assembly: AssemblyDescription("created by Ahrêzan")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("vsd5_1")]
-[assembly: AssemblyCopyright("its free bro")]
+[assembly: AssemblyCompany("ahrezanmenaf")]
+[assembly: AssemblyProduct("Video & Sound Downloader")]
+[assembly: AssemblyCopyright("its free bro :D")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -30,4 +30,4 @@ using System.Runtime.InteropServices;
 //      Revision
 //
 [assembly: AssemblyVersion("5.1.0.0")]
-[assembly: AssemblyFileVersion("2025.0.2.7")]
+[assembly: AssemblyFileVersion("2025.0.2.8")]
