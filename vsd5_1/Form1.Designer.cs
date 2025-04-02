@@ -929,7 +929,7 @@
             // lblVersion
             // 
             this.lblVersion.Name = "lblVersion";
-            this.lblVersion.Size = new System.Drawing.Size(1174, 17);
+            this.lblVersion.Size = new System.Drawing.Size(1143, 17);
             this.lblVersion.Spring = true;
             this.lblVersion.Text = "Version";
             this.lblVersion.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -938,7 +938,7 @@
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(85, 17);
-            this.toolStripStatusLabel1.Text = "5.1_0.2.8_alpha";
+            this.toolStripStatusLabel1.Text = "5.1_0.3.0_alpha";
             // 
             // MainForm
             // 

@@ -1501,28 +1501,16 @@ namespace vsd5_1
                 if (result == DialogResult.Yes)
                 {
                     bool success = await DownloadMissingLibrariesAsync(missingLibraries, downloadUrls);
-                    if (!success)
-                    {
-                        MessageBox.Show("Gerekli kütüphaneler indirilemedi. Uygulama kapanacaktır.", GetLocalizedString("error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        Application.Exit();
-                        return;
-                    }
                 }
                 else
                 {
-                    MessageBox.Show("Gerekli kütüphaneler indirilmeli. Uygulama kapanacaktır.", GetLocalizedString("warning"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    Application.Exit();
-                    return;
+                    DialogResult confirmation = MessageBox.Show(GetLocalizedString("confirm_exit"), GetLocalizedString("warning"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    if (confirmation == DialogResult.Yes)
+                    {
+                        bool success = await DownloadMissingLibrariesAsync(missingLibraries, downloadUrls);
+                    }
                 }
             }
-
-            // Kütüphane işlemleri tamamlandıktan sonra, diğer form yükleme işlemlerine devam edin.
-            // Örneğin, dil dosyalarını yükleme, tema ayarlarını yapma vb.
-            cmbLang.Items.Clear();
-            cmbLang.Items.Add("Varsayılan dil");
-            cmbLang.Items.Add("English");
-            cmbLang.Items.Add("Türkçe");
-            // ... diğer dil seçenekleri
 
             string savedLangCode = LoadSavedLanguagePreference();
             if (string.IsNullOrEmpty(savedLangCode))

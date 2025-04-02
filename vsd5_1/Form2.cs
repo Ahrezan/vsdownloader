@@ -14,8 +14,7 @@ namespace vsd5_1
 {
     public partial class LibraryDownloadForm : MaterialForm
     {
-        // Her kütüphane için oluşturulacak kontrol nesnelerini saklayacak dictionary.
-        public Dictionary<string, DownloadItemControl> DownloadItems { get; private set; } = new Dictionary<string, DownloadItemControl>();
+
 
         public LibraryDownloadForm(List<string> libraries)
         {
@@ -55,42 +54,6 @@ namespace vsd5_1
                 progressBar3.Value = progress;
                 lblStat3.Text = status;
             }
-        }
-    }
-
-    // Her bir kütüphane için oluşturulacak kontrolü temsil eden UserControl
-    public class DownloadItemControl : UserControl
-    {
-        public Label lblLibrary;
-        public ProgressBar progressBar;
-        public Label lblStatus;
-
-        public DownloadItemControl(string libraryName)
-        {
-            // Oluşturulan kontrollerin özelliklerini ayarla
-            lblLibrary = new Label();
-            lblLibrary.Text = libraryName;
-            lblLibrary.AutoSize = true;
-            lblLibrary.Width = 100;
-
-            progressBar = new ProgressBar();
-            progressBar.Width = 200;
-            progressBar.Minimum = 0;
-            progressBar.Maximum = 100;
-
-            lblStatus = new Label();
-            lblStatus.Text = "Waiting...";
-            lblStatus.AutoSize = true;
-            lblStatus.Width = 150;
-
-            // Basit bir layout için FlowLayoutPanel kullanıyoruz
-            FlowLayoutPanel flp = new FlowLayoutPanel();
-            flp.AutoSize = true;
-            flp.Controls.Add(lblLibrary);
-            flp.Controls.Add(progressBar);
-            flp.Controls.Add(lblStatus);
-            this.Controls.Add(flp);
-            this.AutoSize = true;
         }
     }
 }
