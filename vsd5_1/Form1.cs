@@ -1471,9 +1471,66 @@ namespace vsd5_1
 
         #region Dil ve Çeviri İşlemleri
         // Madde 1: cmbLang içerisine "Varsayılan dil" seçeneğini ekle ve sistem diline göre ayarla.
-        private void MainForm_Load(object sender, EventArgs e)
+        private async void MainForm_Load(object sender, EventArgs e)
         {
-            CheckLibraries();
+            // Kütüphane eksikliği kontrolü
+            string libsPath = Path.Combine(Application.StartupPath, "libs");
+            List<string> missingLibraries = new List<string>();
+            Dictionary<string, string> downloadUrls = new Dictionary<string, string>()
+            {
+                { "yt-dlp.exe", "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" },
+                { "spotdl.exe", "https://github.com/spotDL/spotify-downloader/releases/download/v4.2.11/spotdl-4.2.11-win32.exe" },
+                { "ffmpeg.exe", "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" } // ZIP formatı
+            };
+
+            foreach (var lib in downloadUrls.Keys)
+            {
+                string filePath = Path.Combine(libsPath, lib);
+                if (!File.Exists(filePath))
+                {
+                    missingLibraries.Add(lib);
+                }
+            }
+
+            if (missingLibraries.Count > 0)
+            {
+                string message = GetLocalizedString("missing_libs") + string.Join("\n", missingLibraries) +
+                   GetLocalizedString("download_prompt");
+                DialogResult result = MessageBox.Show(message, GetLocalizedString("warning"), MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (result == DialogResult.Yes)
+                {
+                    bool success = await DownloadMissingLibrariesAsync(missingLibraries, downloadUrls);
+                    if (!success)
+                    {
+                        MessageBox.Show("Gerekli kütüphaneler indirilemedi. Uygulama kapanacaktır.", GetLocalizedString("error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        Application.Exit();
+                        return;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Gerekli kütüphaneler indirilmeli. Uygulama kapanacaktır.", GetLocalizedString("warning"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    Application.Exit();
+                    return;
+                }
+            }
+
+            // Kütüphane işlemleri tamamlandıktan sonra, diğer form yükleme işlemlerine devam edin.
+            // Örneğin, dil dosyalarını yükleme, tema ayarlarını yapma vb.
+            cmbLang.Items.Clear();
+            cmbLang.Items.Add("Varsayılan dil");
+            cmbLang.Items.Add("English");
+            cmbLang.Items.Add("Türkçe");
+            // ... diğer dil seçenekleri
+
+            string savedLangCode = LoadSavedLanguagePreference();
+            if (string.IsNullOrEmpty(savedLangCode))
+                savedLangCode = GetDefaultLanguageCode();
+            langManager.LoadLanguage(savedLangCode);
+            ApplyTranslations();
+            SetComboBoxLanguage(savedLangCode);
+            cmbLang.SelectedIndexChanged += cmbLang_SelectedIndexChanged;
 
             cmbLang.Items.Clear();
             cmbLang.Items.Add("Varsayılan dil");
@@ -1500,137 +1557,7 @@ namespace vsd5_1
             cmbLang.SelectedIndexChanged += cmbLang_SelectedIndexChanged;
         }
 
-        private void CheckLibraries()
-        {
-            string libsPath = Path.Combine(Application.StartupPath, "libs");
-            List<string> missingLibraries = new List<string>();
-            Dictionary<string, string> downloadUrls = new Dictionary<string, string>()
-            {
-                { "yt-dlp.exe", "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" },
-                { "spotdl.exe", "https://github.com/spotDL/spotify-downloader/releases/download/v4.2.11/spotdl-4.2.11-win32.exe" },
-                { "ffmpeg.exe", "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" } // Zip formatı
-            };
 
-            foreach (var lib in downloadUrls.Keys)
-            {
-                string filePath = Path.Combine(libsPath, lib);
-                if (!File.Exists(filePath))
-                {
-                    missingLibraries.Add(lib);
-                }
-            }
-
-            if (missingLibraries.Count > 0)
-            {
-                string message = GetLocalizedString("missing_libs") + string.Join("\n", missingLibraries) +
-                    GetLocalizedString("download_prompt");
-                DialogResult result = MessageBox.Show(message, GetLocalizedString("warning"), MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-
-                if (result == DialogResult.Yes)
-                {
-                    // Başlatma: asenkron işlem olduğundan beklemek için (örneğin, Form Load'da await edilebilir)
-                    DownloadMissingLibrariesAsync(missingLibraries, downloadUrls).ConfigureAwait(false);
-                }
-                else
-                {
-                    DialogResult confirmation = MessageBox.Show(GetLocalizedString("confirm_exit"), GetLocalizedString("warning"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                    if (confirmation == DialogResult.No)
-                    {
-                        DownloadMissingLibrariesAsync(missingLibraries, downloadUrls).ConfigureAwait(false);
-                    }
-                }
-            }
-        }
-
-        private async Task DownloadMissingLibrariesAsync(List<string> libraries, Dictionary<string, string> urls)
-        {
-            // TLS 1.2'yi zorunlu kıl
-            System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-
-            foreach (string lib in libraries)
-            {
-                string filePath = Path.Combine(Application.StartupPath, "libs", lib);
-                try
-                {
-                    if (lib == "ffmpeg.exe")
-                    {
-                        string downloadUrl = urls[lib];
-                        await DownloadAndExtractFfmpegAsync(downloadUrl, filePath);
-                        MessageBox.Show(GetLocalizedString("download_success") + lib,
-                            GetLocalizedString("success"), MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        // Diğer dosyalar için senkron WebClient kullanılıyor (isteğe bağlı asenkron hale getirilebilir)
-                        using (WebClient client = new WebClient())
-                        {
-                            client.DownloadFile(urls[lib], filePath);
-                            MessageBox.Show(GetLocalizedString("download_success") + lib,
-                                GetLocalizedString("success"), MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(GetLocalizedString("download_error") + lib + ": " + ex.Message,
-                        GetLocalizedString("error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-        }
-
-        /// <summary>
-        /// HttpClient ile asenkron indirme ve SharpCompress ile ZIP arşivden ffmpeg.exe çıkartma.
-        /// </summary>
-        private async Task DownloadAndExtractFfmpegAsync(string downloadUrl, string destinationExe)
-        {
-            string libsPath = Path.Combine(Application.StartupPath, "libs");
-            string zipPath = Path.Combine(libsPath, "ffmpeg.zip");
-            string extractPath = Path.Combine(libsPath, "ffmpeg_temp");
-
-            // Eğer varsa eski geçici klasörü temizle
-            if (Directory.Exists(extractPath))
-                Directory.Delete(extractPath, true);
-
-            // Asenkron indirme işlemi
-            using (HttpClient client = new HttpClient())
-            {
-                using (HttpResponseMessage response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead))
-                {
-                    response.EnsureSuccessStatusCode();
-                    using (Stream stream = await response.Content.ReadAsStreamAsync())
-                    using (FileStream fs = new FileStream(zipPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
-                    {
-                        await stream.CopyToAsync(fs);
-                    }
-                }
-            }
-
-            // SharpCompress ile ZIP dosyasını çıkartıyoruz
-            Directory.CreateDirectory(extractPath);
-            using (var archive = ArchiveFactory.Open(zipPath))
-            {
-                // Arşivdeki tüm dosyaları extractPath altına çıkarıyoruz
-                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                {
-                    entry.WriteToDirectory(extractPath, new ExtractionOptions() { ExtractFullPath = true, Overwrite = true });
-                }
-            }
-
-            // Çıkartılan klasör içerisinde "ffmpeg.exe" dosyasını arıyoruz
-            // Genelde bu dosya, alt klasörler içerisinde (örneğin "ffmpeg-*-essentials_build/bin/ffmpeg.exe") bulunur.
-            string foundFile = Directory.GetFiles(extractPath, "ffmpeg.exe", SearchOption.AllDirectories).FirstOrDefault();
-            if (foundFile == null)
-            {
-                throw new Exception("ffmpeg.exe bulunamadı.");
-            }
-
-            // Bulunan ffmpeg.exe dosyasını hedef klasöre kopyalıyoruz
-            File.Copy(foundFile, destinationExe, true);
-
-            // Geçici dosyaları temizle
-            File.Delete(zipPath);
-            Directory.Delete(extractPath, true);
-        }
 
         private string GetLocalizedString(string key)
         {
@@ -1649,15 +1576,136 @@ namespace vsd5_1
             }
         }
 
+        private async Task<bool> DownloadMissingLibrariesAsync(List<string> libraries, Dictionary<string, string> urls)
+        {
+            bool allSuccess = true;
+            // Pass the libraries list to the constructor
+            using (LibraryDownloadForm downloadForm = new LibraryDownloadForm(libraries))
+            {
+                var downloadTask = Task.Run(async () =>
+                {
+                    foreach (string lib in libraries)
+                    {
+                        string filePath = Path.Combine(Application.StartupPath, "libs", lib);
+                        try
+                        {
+                            if (lib == "ffmpeg.exe")
+                            {
+                                await DownloadAndExtractFfmpegAsync(urls[lib], filePath, downloadForm, lib);
+                            }
+                            else
+                            {
+                                using (WebClient client = new WebClient())
+                                {
+                                    DateTime startTime = DateTime.Now;
+                                    client.DownloadProgressChanged += (s, e) =>
+                                    {
+                                        double seconds = (DateTime.Now - startTime).TotalSeconds;
+                                        double speed = seconds > 0 ? e.BytesReceived / seconds : 0;
+                                        downloadForm.Invoke(new Action(() =>
+                                        {
+                                            downloadForm.UpdateProgress(lib, e.ProgressPercentage, $"{e.ProgressPercentage}% - {speed / 1024:0.00} KB/s");
+                                        }));
+                                    };
+
+                                    client.DownloadFileCompleted += (s, e) =>
+                                    {
+                                        downloadForm.Invoke(new Action(() =>
+                                        {
+                                            downloadForm.UpdateProgress(lib, 100, "Completed");
+                                        }));
+                                    };
+
+                                    await client.DownloadFileTaskAsync(new Uri(urls[lib]), filePath);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Error downloading {lib}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            allSuccess = false;
+                            break;
+                        }
+                    }
+                    downloadForm.Invoke(new Action(() =>
+                    {
+                        downloadForm.Close();
+                    }));
+                });
+
+                downloadForm.ShowDialog();
+                await downloadTask;
+            }
+            return allSuccess;
+        }
 
 
 
+        /// <summary>
+        /// ffmpeg için ZIP dosyasını indirme ve çıkartma işlemi
+        /// </summary>
+        private async Task DownloadAndExtractFfmpegAsync(string downloadUrl, string destinationExe, LibraryDownloadForm downloadForm, string libName)
+        {
+            string libsPath = Path.Combine(Application.StartupPath, "libs");
+            string zipPath = Path.Combine(libsPath, "ffmpeg.zip");
+            string extractPath = Path.Combine(libsPath, "ffmpeg_temp");
 
+            // Eski geçici klasörü temizle
+            if (Directory.Exists(extractPath))
+                Directory.Delete(extractPath, true);
 
+            using (HttpClient client = new HttpClient())
+            using (HttpResponseMessage response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead))
+            {
+                response.EnsureSuccessStatusCode();
+                var totalBytes = response.Content.Headers.ContentLength.HasValue ? response.Content.Headers.ContentLength.Value : -1L;
+                using (Stream stream = await response.Content.ReadAsStreamAsync())
+                using (FileStream fs = new FileStream(zipPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
+                {
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    long totalRead = 0;
+                    DateTime startTime = DateTime.Now;
+                    while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                    {
+                        await fs.WriteAsync(buffer, 0, bytesRead);
+                        totalRead += bytesRead;
+                        if (totalBytes > 0)
+                        {
+                            int progress = (int)((double)totalRead / totalBytes * 100);
+                            double seconds = (DateTime.Now - startTime).TotalSeconds;
+                            double speed = seconds > 0 ? totalRead / seconds : 0;
+                            downloadForm.UpdateProgress(libName, progress, $"{progress}% - {speed / 1024:0.00} KB/s");
+                        }
+                    }
+                }
+            }
 
+            // ZIP dosyasını çıkarma işlemi
+            Directory.CreateDirectory(extractPath);
+            using (var archive = ArchiveFactory.Open(zipPath))
+            {
+                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                {
+                    entry.WriteToDirectory(extractPath, new ExtractionOptions() { ExtractFullPath = true, Overwrite = true });
+                }
+            }
 
+            // Çıkarılan dosyalar arasında ffmpeg.exe dosyasını ara
+            string foundFile = Directory.GetFiles(extractPath, "ffmpeg.exe", SearchOption.AllDirectories).FirstOrDefault();
+            if (foundFile == null)
+            {
+                throw new Exception("ffmpeg.exe not found in the extracted files.");
+            }
 
+            // ffmpeg.exe dosyasını hedefe kopyala
+            File.Copy(foundFile, destinationExe, true);
 
+            // Geçici dosyaları temizle
+            File.Delete(zipPath);
+            Directory.Delete(extractPath, true);
+            downloadForm.UpdateProgress(libName, 100, "Completed");
+        }
 
         private void cmbLang_SelectedIndexChanged(object sender, EventArgs e)
         {
