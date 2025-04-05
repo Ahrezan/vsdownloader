@@ -447,7 +447,7 @@ namespace vsd5_1
         {
             string selected = cmbLang.SelectedItem?.ToString() ?? "English";
             // Eğer "Varsayılan dil" seçili ise, sistem dilini al
-            if (selected == "Varsayılan dil")
+            if (selected == "Default")
             {
                 return GetDefaultLanguageCode();
             }
@@ -1505,7 +1505,7 @@ namespace vsd5_1
                 else
                 {
                     DialogResult confirmation = MessageBox.Show(GetLocalizedString("confirm_exit"), GetLocalizedString("warning"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                    if (confirmation == DialogResult.Yes)
+                    if (confirmation == DialogResult.No)
                     {
                         bool success = await DownloadMissingLibrariesAsync(missingLibraries, downloadUrls);
                     }
@@ -1521,7 +1521,7 @@ namespace vsd5_1
             cmbLang.SelectedIndexChanged += cmbLang_SelectedIndexChanged;
 
             cmbLang.Items.Clear();
-            cmbLang.Items.Add("Varsayılan dil");
+            cmbLang.Items.Add("Default");
             cmbLang.Items.Add("English");
             cmbLang.Items.Add("Türkçe");
             cmbLang.Items.Add("Español");
@@ -1544,8 +1544,6 @@ namespace vsd5_1
 
             cmbLang.SelectedIndexChanged += cmbLang_SelectedIndexChanged;
         }
-
-
 
         private string GetLocalizedString(string key)
         {
@@ -1627,8 +1625,6 @@ namespace vsd5_1
             return allSuccess;
         }
 
-
-
         /// <summary>
         /// ffmpeg için ZIP dosyasını indirme ve çıkartma işlemi
         /// </summary>
@@ -1699,7 +1695,7 @@ namespace vsd5_1
         {
             string selected = cmbLang.SelectedItem.ToString();
             string langCode = "english";
-            if (selected == "Varsayılan dil")
+            if (selected == "Default")
             {
                 langCode = GetDefaultLanguageCode();
             }

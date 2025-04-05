@@ -7,6 +7,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -14,11 +15,23 @@ namespace vsd5_1
 {
     public partial class LibraryDownloadForm : MaterialForm
     {
+        // İndirme devam ediyorsa true olacak, onay alındığında false yapılacak
+        private bool downloadInProgress = true;
+        private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
+        // Çoklu dil desteği için LanguageManager örneği ekledik
+        private LanguageManager langManager = new LanguageManager();
+
+        // Kapama onayının zaten alındığını tutan bayrak
+        private bool isClosingConfirmed = false;
 
         public LibraryDownloadForm(List<string> libraries)
         {
             InitializeComponent();
+            this.FormClosing += LibraryDownloadForm_FormClosing;
+
+            // Maximize butonunu devre dışı bırak
+            this.MaximizeBox = false;
 
             // MaterialSkinManager örneği oluştur
             var materialSkinManager = MaterialSkinManager.Instance;
@@ -53,6 +66,19 @@ namespace vsd5_1
             {
                 progressBar3.Value = progress;
                 lblStat3.Text = status;
+            }
+        }
+
+        private void LibraryDownloadForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // Eğer indirme devam ediyorsa, form kapanmasını tamamen engelle
+            if (downloadInProgress)
+            {
+                MessageBox.Show(langManager.GetTranslation("downloadInProgressPreventClose"),
+                                langManager.GetTranslation("warning"),
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning);
+                e.Cancel = true;
             }
         }
     }

@@ -40,7 +40,7 @@
             this.progressBar2 = new MaterialSkin.Controls.MaterialProgressBar();
             this.lblLib2 = new MaterialSkin.Controls.MaterialLabel();
             this.materialCard2 = new MaterialSkin.Controls.MaterialCard();
-            this.materialLabel1 = new MaterialSkin.Controls.MaterialLabel();
+            this.lblDownLib = new MaterialSkin.Controls.MaterialLabel();
             this.materialCard1.SuspendLayout();
             this.materialCard2.SuspendLayout();
             this.SuspendLayout();
@@ -93,7 +93,7 @@
             this.materialCard1.Controls.Add(this.lblLib1);
             this.materialCard1.Depth = 0;
             this.materialCard1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(222)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.materialCard1.Location = new System.Drawing.Point(17, 82);
+            this.materialCard1.Location = new System.Drawing.Point(17, 106);
             this.materialCard1.Margin = new System.Windows.Forms.Padding(14);
             this.materialCard1.MouseState = MaterialSkin.MouseState.HOVER;
             this.materialCard1.Name = "materialCard1";
@@ -172,10 +172,10 @@
             // materialCard2
             // 
             this.materialCard2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.materialCard2.Controls.Add(this.materialLabel1);
+            this.materialCard2.Controls.Add(this.lblDownLib);
             this.materialCard2.Depth = 0;
             this.materialCard2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(222)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.materialCard2.Location = new System.Drawing.Point(17, 14);
+            this.materialCard2.Location = new System.Drawing.Point(17, 38);
             this.materialCard2.Margin = new System.Windows.Forms.Padding(14);
             this.materialCard2.MouseState = MaterialSkin.MouseState.HOVER;
             this.materialCard2.Name = "materialCard2";
@@ -183,32 +183,34 @@
             this.materialCard2.Size = new System.Drawing.Size(346, 53);
             this.materialCard2.TabIndex = 13;
             // 
-            // materialLabel1
+            // lblDownLib
             // 
-            this.materialLabel1.Depth = 0;
-            this.materialLabel1.Font = new System.Drawing.Font("Roboto Medium", 20F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Pixel);
-            this.materialLabel1.FontType = MaterialSkin.MaterialSkinManager.fontType.H6;
-            this.materialLabel1.Location = new System.Drawing.Point(17, 14);
-            this.materialLabel1.MouseState = MaterialSkin.MouseState.HOVER;
-            this.materialLabel1.Name = "materialLabel1";
-            this.materialLabel1.Size = new System.Drawing.Size(312, 25);
-            this.materialLabel1.TabIndex = 0;
-            this.materialLabel1.Text = "Downloaded Libraries";
-            this.materialLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblDownLib.Depth = 0;
+            this.lblDownLib.Font = new System.Drawing.Font("Roboto Medium", 20F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Pixel);
+            this.lblDownLib.FontType = MaterialSkin.MaterialSkinManager.fontType.H6;
+            this.lblDownLib.Location = new System.Drawing.Point(17, 14);
+            this.lblDownLib.MouseState = MaterialSkin.MouseState.HOVER;
+            this.lblDownLib.Name = "lblDownLib";
+            this.lblDownLib.Size = new System.Drawing.Size(312, 25);
+            this.lblDownLib.TabIndex = 0;
+            this.lblDownLib.Text = "Downloaded Libraries";
+            this.lblDownLib.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // LibraryDownloadForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.ClientSize = new System.Drawing.Size(380, 248);
+            this.ClientSize = new System.Drawing.Size(380, 272);
             this.Controls.Add(this.materialCard2);
             this.Controls.Add(this.materialCard1);
-            this.FormStyle = MaterialSkin.Controls.MaterialForm.FormStyles.StatusAndActionBar_None;
+            this.FormStyle = MaterialSkin.Controls.MaterialForm.FormStyles.ActionBar_None;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "LibraryDownloadForm";
-            this.Padding = new System.Windows.Forms.Padding(3, 0, 3, 3);
+            this.Padding = new System.Windows.Forms.Padding(3, 24, 3, 3);
+            this.Sizable = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.LibraryDownloadForm_FormClosing);
             this.materialCard1.ResumeLayout(false);
             this.materialCard1.PerformLayout();
             this.materialCard2.ResumeLayout(false);
@@ -228,6 +230,6 @@
         private MaterialSkin.Controls.MaterialProgressBar progressBar2;
         private MaterialSkin.Controls.MaterialLabel lblLib2;
         private MaterialSkin.Controls.MaterialCard materialCard2;
-        private MaterialSkin.Controls.MaterialLabel materialLabel1;
+        private MaterialSkin.Controls.MaterialLabel lblDownLib;
     }
 }
