@@ -15,6 +15,7 @@ namespace vsd5_1
 {
     public partial class LibraryDownloadForm : MaterialForm
     {
+
         // İndirme devam ediyorsa true olacak, onay alındığında false yapılacak
         private bool downloadInProgress = true;
         private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
@@ -69,15 +70,29 @@ namespace vsd5_1
             }
         }
 
+        public void CompleteDownloads()
+        {
+            // İndirme bitti, artık kapanmaya izin ver
+            downloadInProgress = false;
+            this.Close();
+        }
+
         private void LibraryDownloadForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            // Eğer indirme devam ediyorsa, form kapanmasını tamamen engelle
-            if (downloadInProgress)
+            if (downloadInProgress && !isClosingConfirmed)
             {
-                MessageBox.Show(langManager.GetTranslation("downloadInProgressPreventClose"),
-                                langManager.GetTranslation("warning"),
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Warning);
+                // Kullanıcıya bir kere uyar, ikinci seferinde kapatsın
+                var result = MessageBox.Show(
+                    langManager.GetTranslation("downloadInProgressPreventClose"),
+                    langManager.GetTranslation("warning"),
+                    MessageBoxButtons.OKCancel,
+                    MessageBoxIcon.Warning);
+                if (result == DialogResult.OK)
+                {
+                    isClosingConfirmed = true;
+                    // İlk onaydan sonra yeniden Close() çağrılırsa kapanacak
+                    this.Close();
+                }
                 e.Cancel = true;
             }
         }

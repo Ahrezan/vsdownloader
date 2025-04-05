@@ -22,6 +22,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace vsd5_1
 {
@@ -76,14 +77,20 @@ namespace vsd5_1
             public string PlaylistTitle { get; set; }
         }
 
-        // İndirme kuyruğu için gösterim verileri
+        // --- Yardımcı Sınıflar ---
         private class DownloadDisplayData
         {
+            public string ImageKey { get; set; }
+            public Image Thumbnail { get; set; }
             public string Title { get; set; }
+            public string Channel { get; set; }
+            public string Quality { get; set; }
+            public int ProgressPercent { get; set; }
             public string Status { get; set; }
             public string Speed { get; set; }
             public string FileSizeInfo { get; set; }
         }
+
 
         // Sıralama için alanlar
         private int sortColumn = -1;
@@ -99,6 +106,7 @@ namespace vsd5_1
 
         // İndirme işlemleri için alanlar
         private SemaphoreSlim downloadSemaphore;
+        // İndirme işlerini tutan dictionary
         private Dictionary<ListViewItem, DownloadJobData> downloadJobs = new Dictionary<ListViewItem, DownloadJobData>();
 
         private class DownloadJobData
@@ -153,6 +161,9 @@ namespace vsd5_1
         public MainForm()
         {
             InitializeComponent();
+
+            materialSkinManager = MaterialSkinManager.Instance;
+            materialSkinManager.AddFormToManage(this);
 
             // ListView kenarlıklarını kaldırmak için
             listViewYT.BorderStyle = BorderStyle.None;
@@ -214,21 +225,53 @@ namespace vsd5_1
                 BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
                 null, listViewYT, new object[] { true });
 
-            // listViewLoadYT için ayarlar
+            // --- listViewYT Ayarları (Kuyruk sütunu tıklanınca sıralama) ---
+            listViewYT.OwnerDraw = true;
+            listViewYT.View = View.Details;
+            listViewYT.FullRowSelect = true;
+            listViewYT.Columns.Clear();
+            listViewYT.Columns.Add("queueYT", langManager.GetTranslation("downloadQueue"));
+            listViewYT.Columns[0].Width = listViewYT.ClientSize.Width;
+            listViewYT.Resize += (s, e) =>
+            {
+                listViewYT.Columns[0].Width = listViewYT.ClientSize.Width;
+            };
+            listViewYT.DrawColumnHeader += listViewYT_DrawColumnHeader;
+            listViewYT.DrawItem += listViewYT_DrawItem;
+            listViewYT.ColumnClick += (s, e) =>
+            {
+                // Tek sütun var, ters sırala
+                sortOrder = sortOrder == SortOrder.Ascending ? SortOrder.Descending : SortOrder.Ascending;
+                listViewYT.ListViewItemSorter = new ListViewItemComparer(0, sortOrder);
+                listViewYT.Sort();
+            };
+
+            // Tema ve font uyumu
+            listViewYT.BackColor = materialSkinManager.Theme == MaterialSkinManager.Themes.DARK ? Color.FromArgb(48, 48, 48) : Color.White;
+            listViewYT.ForeColor = materialSkinManager.Theme == MaterialSkinManager.Themes.DARK ? Color.White : Color.Black;
+            listViewYT.Font = new Font("Segoe UI", 10);
+
+            // --- listViewLoadYT Ayarları (İndirme kuyruğu) ---
             listViewLoadYT.OwnerDraw = true;
             listViewLoadYT.View = View.Details;
             listViewLoadYT.FullRowSelect = true;
             listViewLoadYT.Columns.Clear();
-            // Madde 4: Sütun genişliğini tam genişlikte ayarla
-            listViewLoadYT.Columns.Add("DownloadQueue", listViewLoadYT.ClientSize.Width);
+            listViewLoadYT.Columns.Add("queueLoad", langManager.GetTranslation("downloadQueue"));
+            listViewLoadYT.Columns[0].Width = listViewLoadYT.ClientSize.Width;
             listViewLoadYT.Resize += (s, e) =>
             {
                 listViewLoadYT.Columns[0].Width = listViewLoadYT.ClientSize.Width;
             };
-            listViewLoadYT.ColumnWidthChanging += listView_ColumnWidthChanging;
             listViewLoadYT.DrawColumnHeader += listViewLoadYT_DrawColumnHeader;
             listViewLoadYT.DrawItem += listViewLoadYT_DrawItem;
+            listViewLoadYT.DrawSubItem += listViewLoadYT_DrawSubItem;
             listViewLoadYT.MouseClick += listViewLoadYT_MouseClick;
+
+            // Tema ve font uyumu
+            listViewLoadYT.BackColor = materialSkinManager.Theme == MaterialSkinManager.Themes.DARK ? Color.FromArgb(48, 48, 48) : Color.White;
+            listViewLoadYT.ForeColor = materialSkinManager.Theme == MaterialSkinManager.Themes.DARK ? Color.White : Color.Black;
+            listViewLoadYT.Font = new Font("Segoe UI", 10);
+
 
             materialSkinManager = MaterialSkinManager.Instance;
             materialSkinManager.AddFormToManage(this);
@@ -777,8 +820,8 @@ namespace vsd5_1
 
         private async void AddVideoItem(JToken video)
         {
-            string title = video["title"]?.ToString() ?? "Bilinmiyor";
-            string channel = video["uploader"]?.ToString() ?? "Bilinmiyor";
+            string title = video["title"]?.ToString() ?? "Unknown";
+            string channel = video["uploader"]?.ToString() ?? "Unknown";
             string duration = video["duration"] != null ? FormatDuration((int)video["duration"]) : "0:00";
             string thumbnailUrl = video["thumbnail"]?.ToString();
             string videoUrl = video["webpage_url"]?.ToString() ?? "";
@@ -858,10 +901,7 @@ namespace vsd5_1
 
         private void listViewYT_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
         {
-            using (SolidBrush brush = new SolidBrush(materialSkinManager.ColorScheme.PrimaryColor))
-            {
-                e.Graphics.FillRectangle(brush, e.Bounds);
-            }
+            e.Graphics.FillRectangle(new SolidBrush(materialSkinManager.ColorScheme.PrimaryColor), e.Bounds);
             TextRenderer.DrawText(e.Graphics, e.Header.Text, e.Font, e.Bounds,
                 Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
         }
@@ -909,8 +949,8 @@ namespace vsd5_1
 
         private void listViewYT_DrawItem(object sender, DrawListViewItemEventArgs e)
         {
-            if (listViewYT.View != View.Details)
-                e.DrawDefault = true;
+            // Sadece Default çizilsin (AddVideoItem zaten OwnerDrawSubItem kullanıyor)
+            e.DrawDefault = true;
         }
 
         private void listViewYT_MouseClick(object sender, MouseEventArgs e)
@@ -1086,14 +1126,14 @@ namespace vsd5_1
                 return;
             }
 
-            List<ListViewItem> itemsToDownload = new List<ListViewItem>();
+            // Seçili videoları topla
+            var itemsToDownload = new List<ListViewItem>();
             foreach (ListViewItem item in listViewYT.Items)
             {
-                VideoItemData data = item.Tag as VideoItemData;
-                if (data != null && data.IsTicked)
+                var vdata = item.Tag as VideoItemData;
+                if (vdata != null && vdata.IsTicked)
                     itemsToDownload.Add(item);
             }
-
             if (itemsToDownload.Count == 0)
             {
                 MessageBox.Show(langManager.GetTranslation("noSelectedVideo"),
@@ -1101,52 +1141,49 @@ namespace vsd5_1
                 return;
             }
 
-            if (listViewYT.Items.Count == itemsToDownload.Count)
-            {
-                cmbYTFormat.Visible = false;
-                cmbYTQuality.Visible = false;
-                btnYTDownload.Visible = false;
-                chkSelectYTAll.Visible = false;
-            }
-
-            FormatItem selectedFormat = cmbYTFormat.SelectedItem as FormatItem;
+            // Format ve kalite seçimleri
+            var selectedFormat = cmbYTFormat.SelectedItem as FormatItem;
             string selectedQuality = cmbYTQuality.SelectedItem.ToString();
 
             foreach (ListViewItem item in itemsToDownload)
             {
-                VideoItemData data = item.Tag as VideoItemData;
-                string videoTitle = data.Title;
-                string downloadArgs = GetDownloadArguments(data, selectedFormat, selectedQuality);
-                if (string.IsNullOrEmpty(downloadArgs))
-                    continue;
+                var vdata = item.Tag as VideoItemData;
+                if (vdata == null || !vdata.IsTicked) continue;
 
-                // Hesaplanan çıkış dosya yolunu alalım
-                string outputFile = GetOutputPath(data, selectedFormat);
+                string args = GetDownloadArguments(vdata, selectedFormat, selectedQuality);
+                if (string.IsNullOrEmpty(args)) continue;
 
-                DownloadDisplayData ddd = new DownloadDisplayData
+                // Resim anahtarı: AddVideoItem'da kullandığın key ile aynı olmalı
+                string imageKey = vdata.VideoUrl; // veya vdata.ID
+
+                var ddd = new DownloadDisplayData
                 {
-                    Title = videoTitle,
+                    ImageKey = imageKey,
+                    Thumbnail = imageListYT.Images.ContainsKey(imageKey)
+                                    ? imageListYT.Images[imageKey] : null,
+                    Title = vdata.Title,
+                    Channel = vdata.Channel,
+                    Quality = $"{selectedFormat.FormatName} / {selectedQuality}",
+                    ProgressPercent = 0,
                     Status = langManager.GetTranslation("waiting"),
                     Speed = "",
                     FileSizeInfo = ""
                 };
-                ListViewItem dlItem = new ListViewItem();
-                dlItem.Tag = ddd;
+
+                var dlItem = new ListViewItem { Tag = ddd };
                 listViewLoadYT.Items.Add(dlItem);
 
-                CancellationTokenSource cts = new CancellationTokenSource();
-                DownloadJobData jobData = new DownloadJobData
+                var cts = new CancellationTokenSource();
+                var job = new DownloadJobData
                 {
                     CancellationTokenSource = cts,
-                    Status = langManager.GetTranslation("waiting"),
-                    OutputFile = outputFile
+                    OutputFile = GetOutputPath(vdata, selectedFormat)
                 };
-                downloadJobs.Add(dlItem, jobData);
-                StartDownload(dlItem, downloadArgs, jobData);
-
-                listViewYT.Items.Remove(item);
-                UpdateSelectAllCheckbox();
+                downloadJobs[dlItem] = job;
+                StartDownload(dlItem, args, job);
             }
+
+            btnYTCancel.Visible = downloadJobs.Count > 0;
             await Task.CompletedTask;
         }
 
@@ -1299,30 +1336,43 @@ namespace vsd5_1
             }
         }
 
-        private void UpdateDownloadStatus(ListViewItem item, string status)
+        private void UpdateDownloadStatus(ListViewItem item, string statusText)
         {
-            DownloadDisplayData ddd = item.Tag as DownloadDisplayData;
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateDownloadStatus(item, statusText)));
+                return;
+            }
+            var ddd = item.Tag as DownloadDisplayData;
             if (ddd != null)
             {
-                ddd.Status = status;
+                ddd.Status = statusText;
                 listViewLoadYT.Invalidate(item.Bounds);
             }
         }
 
+        // --- İlerleme Güncelleme ---
         private void UpdateDownloadProgress(ListViewItem item, string progressText)
         {
-            if (this.InvokeRequired)
+            if (InvokeRequired)
             {
-                this.Invoke(new Action(() => UpdateDownloadProgress(item, progressText)));
+                Invoke(new Action(() => UpdateDownloadProgress(item, progressText)));
                 return;
             }
-            DownloadDisplayData ddd = item.Tag as DownloadDisplayData;
-            if (ddd != null)
+
+            var ddd = item.Tag as DownloadDisplayData;
+            if (ddd == null) return;
+
+            // Regex ile yüzde, boyut ve hız
+            var match = Regex.Match(progressText, @"(\d+(\.\d+)?)%.*of\s+([\d\.]+\w+).*at\s+([\d\.]+\w+\/s)");
+            if (match.Success)
             {
-                // Burada progressText’i hız/dosya bilgisi olarak gösterebilirsiniz.
-                ddd.Speed = progressText;
-                listViewLoadYT.Invalidate(item.Bounds);
+                ddd.ProgressPercent = (int)(double.Parse(match.Groups[1].Value));
+                ddd.FileSizeInfo = match.Groups[3].Value;
+                ddd.Speed = match.Groups[4].Value;
             }
+            ddd.Status = langManager.GetTranslation("downloading");
+            listViewLoadYT.Invalidate(item.Bounds);
         }
 
         private void btnYTCancel_Click(object sender, EventArgs e)
@@ -1333,57 +1383,40 @@ namespace vsd5_1
             btnYTCancel.Visible = false;
         }
 
-        // listViewLoadYT’nin OwnerDraw metodu: Başlık satırının altında durum, hız ve dosya bilgisi gösteriliyor; sağda X simgesi.
         private void listViewLoadYT_DrawItem(object sender, DrawListViewItemEventArgs e)
         {
-            e.DrawDefault = false;
-            DownloadDisplayData data = e.Item.Tag as DownloadDisplayData;
-            if (data == null) return;
-            Color bg = e.Item.Selected ? SystemColors.Highlight : listViewLoadYT.BackColor;
+            // Arka plan
+            var bg = e.Item.Selected ? SystemColors.Highlight : listViewLoadYT.BackColor;
             e.Graphics.FillRectangle(new SolidBrush(bg), e.Bounds);
-            int cancelWidth = 40;
-            Rectangle cancelRect = new Rectangle(e.Bounds.Right - cancelWidth, e.Bounds.Top, cancelWidth, e.Bounds.Height);
-            int textWidth = e.Bounds.Width - cancelWidth - 10;
-            Rectangle titleRect = new Rectangle(e.Bounds.Left + 5, e.Bounds.Top, textWidth, e.Bounds.Height / 2);
-            Rectangle infoRect = new Rectangle(e.Bounds.Left + 5, e.Bounds.Top + e.Bounds.Height / 2, textWidth, e.Bounds.Height / 2);
-            TextRenderer.DrawText(e.Graphics, data.Title, e.Item.Font, titleRect, e.Item.ForeColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
-            string infoText = $"Status: {data.Status}   Speed: {data.Speed}   {data.FileSizeInfo}";
-            TextRenderer.DrawText(e.Graphics, infoText, e.Item.Font, infoRect, e.Item.ForeColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
-            TextRenderer.DrawText(e.Graphics, "X", e.Item.Font, cancelRect, Color.Red, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            // Alt öğeyi biz çizeceğiz
         }
+
 
         private void listViewLoadYT_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
         {
-            using (SolidBrush brush = new SolidBrush(materialSkinManager.ColorScheme.PrimaryColor))
-            {
-                e.Graphics.FillRectangle(brush, e.Bounds);
-            }
-            TextRenderer.DrawText(e.Graphics, langManager.GetTranslation("downloadQueue"), e.Font, e.Bounds,
-                Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            // Başlık satırını gizlecek şekilde arka planla doldur
+            e.Graphics.FillRectangle(new SolidBrush(listViewLoadYT.BackColor), e.Bounds);
         }
 
         private void listViewLoadYT_MouseClick(object sender, MouseEventArgs e)
         {
-            ListViewHitTestInfo info = listViewLoadYT.HitTest(e.Location);
+            var info = listViewLoadYT.HitTest(e.Location);
             if (info.Item != null)
             {
-                Rectangle itemBounds = info.Item.Bounds;
-                int cancelWidth = 40;
-                Rectangle cancelRect = new Rectangle(itemBounds.Right - cancelWidth, itemBounds.Top, cancelWidth, itemBounds.Height);
+                Rectangle full = info.Item.Bounds;
+                Rectangle cancelRect = new Rectangle(
+                    full.Right - 30,
+                    full.Top + (full.Height - 20) / 2,
+                    20, 20);
                 if (cancelRect.Contains(e.Location))
                 {
-                    if (downloadJobs.TryGetValue(info.Item, out DownloadJobData jobData))
+                    // İptal et
+                    if (downloadJobs.TryGetValue(info.Item, out var job))
                     {
-                        jobData.CancellationTokenSource.Cancel();
-                        try
-                        {
-                            if (File.Exists(jobData.OutputFile))
-                                File.Delete(jobData.OutputFile);
-                        }
-                        catch { }
+                        job.CancellationTokenSource.Cancel();
+                        try { if (File.Exists(job.OutputFile)) File.Delete(job.OutputFile); } catch { }
                         downloadJobs.Remove(info.Item);
                         listViewLoadYT.Items.Remove(info.Item);
-                        btnYTCancel.Visible = downloadJobs.Count > 0;
                     }
                 }
             }
@@ -1615,7 +1648,7 @@ namespace vsd5_1
                     }
                     downloadForm.Invoke(new Action(() =>
                     {
-                        downloadForm.Close();
+                        downloadForm.CompleteDownloads();
                     }));
                 });
 
@@ -1866,6 +1899,65 @@ namespace vsd5_1
             MessageBox.Show("cmbLang eleman sayısı: " + cmbLang.Items.Count);
 
         }
+
+        private void listViewLoadYT_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
+        {
+            var data = e.Item.Tag as DownloadDisplayData;
+            if (data == null) return;
+
+            // Satır boyutu
+            Rectangle full = new Rectangle(
+                e.SubItem.Bounds.Left,
+                e.SubItem.Bounds.Top,
+                listViewLoadYT.Columns[0].Width,
+                e.SubItem.Bounds.Height);
+
+            // Arka plan tekrar
+            var bg = e.Item.Selected ? SystemColors.Highlight : listViewLoadYT.BackColor;
+            e.Graphics.FillRectangle(new SolidBrush(bg), full);
+
+            int x = full.Left + 5;
+            int y = full.Top + 5;
+
+            // 1) Thumbnail (90×50)
+            if (data.Thumbnail != null)
+                e.Graphics.DrawImage(data.Thumbnail, new Rectangle(x, y, 90, 50));
+            x += 100;
+
+            // Renkler
+            Brush fg = e.Item.Selected ? Brushes.White : Brushes.Black;
+            Brush subFg = e.Item.Selected ? Brushes.LightGray : Brushes.Gray;
+
+            // 2) Başlık
+            e.Graphics.DrawString(data.Title, new Font("Segoe UI", 10, FontStyle.Bold), fg, x, y);
+            // 3) Kanal
+            e.Graphics.DrawString(data.Channel, new Font("Segoe UI", 9), subFg, x, y + 20);
+            // 4) Kalite
+            e.Graphics.DrawString(data.Quality, new Font("Segoe UI", 9), fg, x, y + 40);
+
+            // 5) ProgressBar sınırı
+            Rectangle barRect = new Rectangle(x, full.Bottom - 20, 200, 10);
+            e.Graphics.DrawRectangle(Pens.Gray, barRect);
+            int w = Math.Max(0, Math.Min(barRect.Width - 2, (barRect.Width - 2) * data.ProgressPercent / 100));
+            e.Graphics.FillRectangle(Brushes.Green, new Rectangle(barRect.Left + 1, barRect.Top + 1, w, barRect.Height - 2));
+
+            // 6) Status / Speed / Boyut (alt satırda)
+            string info = $"{data.Status}   {data.Speed}   {data.FileSizeInfo}";
+            e.Graphics.DrawString(info, new Font("Segoe UI", 9), fg, x + 210, y + 20);
+
+            // 7) İptal butonu “X”
+            Rectangle cancelRect = new Rectangle(
+                full.Right - 30,
+                full.Top + (full.Height - 20) / 2,
+                20, 20);
+            e.Graphics.DrawString("X", new Font("Segoe UI", 10, FontStyle.Bold),
+                                  Brushes.Red, cancelRect, new StringFormat
+                                  {
+                                      Alignment = StringAlignment.Center,
+                                      LineAlignment = StringAlignment.Center
+                                  });
+        }
+
     }
 
     public class LanguageManager
@@ -1882,7 +1974,7 @@ namespace vsd5_1
             }
             else
             {
-                MessageBox.Show($"Dil dosyası bulunamadı: {langPath}",
+                MessageBox.Show($"Language file not found: {langPath}",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

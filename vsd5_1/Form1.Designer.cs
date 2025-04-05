@@ -245,6 +245,7 @@
             this.listViewLoadYT.TabIndex = 1;
             this.listViewLoadYT.UseCompatibleStateImageBehavior = false;
             this.listViewLoadYT.View = System.Windows.Forms.View.Details;
+            this.listViewLoadYT.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.listViewLoadYT_DrawSubItem);
             // 
             // listCard
             // 
@@ -929,7 +930,7 @@
             // lblVersion
             // 
             this.lblVersion.Name = "lblVersion";
-            this.lblVersion.Size = new System.Drawing.Size(1143, 17);
+            this.lblVersion.Size = new System.Drawing.Size(1174, 17);
             this.lblVersion.Spring = true;
             this.lblVersion.Text = "Version";
             this.lblVersion.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
