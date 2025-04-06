@@ -8,6 +8,8 @@ This repository is available in the following languages:
 - [English](README.md)
 - [Türkçe](README.tr.md)
 
+Note: This is my first project. If there are any mistakes or errors, please excuse me in advance. I am new to coding.
+
 | File        | Description                      |
 |-------------|-----------------------------------------|
 | [![Download](https://img.shields.io/badge/İndir-v0.2.7--alpha-blue)](https://github.com/Ahrezan/vsdownloader/releases/download/v0.2.7-alpha/VSDSetup-0_2_7-alpha.exe) | Latest (Alpha) version |
