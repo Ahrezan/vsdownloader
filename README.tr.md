@@ -8,6 +8,8 @@ Bu depo aşağıdaki dillerde mevcuttur:
 - [English](README.md)
 - [Türkçe](README.tr.md)
 
+Not: Bu benim ilk projem. Herhangi bir hata veya yanlış varsa lütfen şimdiden beni mazur görün. Kodlamada yeniyim.
+
 | Dosya        | Açıklama                                   |
 |-------------|--------------------------------------------|
 | [![İndir](https://img.shields.io/badge/İndir-v0.2.7--alpha-blue)](https://github.com/Ahrezan/vsdownloader/releases/download/v0.2.7-alpha/VSDSetup-0_2_7-alpha.exe) | En Son (Alpha) Sürüm |
