@@ -1,52 +1,60 @@
 ﻿using MaterialSkin;
 using MaterialSkin.Controls;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
+using System.IO;
 using System.Windows.Forms;
 
 namespace vsd5_1
 {
     public partial class LibraryDownloadForm : MaterialForm
     {
-
-        // İndirme devam ediyorsa true olacak, onay alındığında false yapılacak
         private bool downloadInProgress = true;
         private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-
-        // Çoklu dil desteği için LanguageManager örneği ekledik
         private LanguageManager langManager = new LanguageManager();
-
-        // Kapama onayının zaten alındığını tutan bayrak
         private bool isClosingConfirmed = false;
+
+        private string LoadSavedLanguagePreference()
+        {
+            string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string settingsDir = Path.Combine(docs, "VSDApplication");
+            string settingsPath = Path.Combine(settingsDir, "settings.json");
+
+            if (File.Exists(settingsPath))
+            {
+                try
+                {
+                    var settings = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(settingsPath));
+                    if (settings != null && settings.ContainsKey("language"))
+                        return settings["language"];
+                }
+                catch { }
+            }
+            return "";
+        }
 
         public LibraryDownloadForm(List<string> libraries)
         {
             InitializeComponent();
+            var savedLang = LoadSavedLanguagePreference();
+            langManager.LoadLanguage(savedLang);
+            this.HandleCreated += (s, e) => { };
             this.FormClosing += LibraryDownloadForm_FormClosing;
-
-            // Maximize butonunu devre dışı bırak
+            lblDownLib.Text = langManager.GetTranslation("downloadingLibraries");
             this.MaximizeBox = false;
-
-            // MaterialSkinManager örneği oluştur
             var materialSkinManager = MaterialSkinManager.Instance;
-
-            // Tema yönetimini etkinleştir ve formu ayarla
             materialSkinManager.AddFormToManage(this);
-
-            // Tema modunu koyu olarak ayarla
             materialSkinManager.Theme = MaterialSkinManager.Themes.DARK;
         }
 
-        // Her bir kütüphanenin indirme ilerlemesini güncellemek için metod.
         public void UpdateProgress(string libraryName, int progress, string status)
         {
+            // Kontrolün handle'ı oluşturulmamışsa güncelleme yapma.
+            if (!this.IsHandleCreated)
+                return;
+
             if (this.InvokeRequired)
             {
                 this.Invoke(new Action(() => UpdateProgress(libraryName, progress, status)));
@@ -72,16 +80,18 @@ namespace vsd5_1
 
         public void CompleteDownloads()
         {
-            // İndirme bitti, artık kapanmaya izin ver
             downloadInProgress = false;
             this.Close();
         }
 
         private void LibraryDownloadForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (!this.IsHandleCreated)
+                return;
+
             if (downloadInProgress && !isClosingConfirmed)
             {
-                // Kullanıcıya bir kere uyar, ikinci seferinde kapatsın
+                // Now that we check for the handle, we avoid calling Invoke too early.
                 var result = MessageBox.Show(
                     langManager.GetTranslation("downloadInProgressPreventClose"),
                     langManager.GetTranslation("warning"),
@@ -90,8 +100,7 @@ namespace vsd5_1
                 if (result == DialogResult.OK)
                 {
                     isClosingConfirmed = true;
-                    // İlk onaydan sonra yeniden Close() çağrılırsa kapanacak
-                    this.Close();
+                    return;
                 }
                 e.Cancel = true;
             }

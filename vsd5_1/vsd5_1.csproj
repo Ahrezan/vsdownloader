@@ -33,7 +33,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>bin\Debug\vsd.ico</ApplicationIcon>
+    <ApplicationIcon>vsd.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
@@ -148,6 +148,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="vsd.ico" />
     <None Include="bin\Debug\img\search.png" />
     <None Include="bin\Debug\vsd.ico" />
     <Content Include="ILLink\ILLink.Descriptors.LibraryBuild.xml" />

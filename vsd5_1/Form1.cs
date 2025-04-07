@@ -13,7 +13,6 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using SharpCompress.Archives;
-using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using System.Linq;
 using System.Net;
@@ -75,6 +74,7 @@ namespace vsd5_1
             public string Channel { get; set; }
             public string Duration { get; set; }
             public string PlaylistTitle { get; set; }
+            public string VideoId { get; set; }
         }
 
         // --- Yardımcı Sınıflar ---
@@ -161,6 +161,13 @@ namespace vsd5_1
         public MainForm()
         {
             InitializeComponent();
+
+            // Timer’ı oluştur ve sadece tek seferlik tetiklesin
+            resizeTimer = new System.Windows.Forms.Timer { Interval = 100 };
+            resizeTimer.Tick += ResizeTimer_Tick;
+
+            // Form’un Resize event’ına timer başlatmayı bağla
+            this.Resize += MainForm_Resize;
 
             materialSkinManager = MaterialSkinManager.Instance;
             materialSkinManager.AddFormToManage(this);
@@ -252,6 +259,7 @@ namespace vsd5_1
             listViewYT.Font = new Font("Segoe UI", 10);
 
             // --- listViewLoadYT Ayarları (İndirme kuyruğu) ---
+            listViewLoadYT.ColumnClick += listViewLoadYT_ColumnClick;
             listViewLoadYT.OwnerDraw = true;
             listViewLoadYT.View = View.Details;
             listViewLoadYT.FullRowSelect = true;
@@ -314,7 +322,7 @@ namespace vsd5_1
             listViewYT.ColumnClick += listViewYT_ColumnClick;
             listViewYT.MouseClick += listViewYT_MouseClick; // Her tıklamada "Hepsini Seç" güncellensin
 
-            imageListYT = new ImageList { ImageSize = new Size(160, 90) };
+            imageListYT = new ImageList { ImageSize = new Size(112, 63) };
             listViewYT.SmallImageList = imageListYT;
             listViewLoadYT.SmallImageList = imageListYT;
 
@@ -839,6 +847,7 @@ namespace vsd5_1
                 return;
             loadedVideoIds.Add(videoKey);
 
+            // İlk olarak VideoItemData nesnesini oluşturun.
             VideoItemData vidData = new VideoItemData
             {
                 IsTicked = true,
@@ -849,6 +858,10 @@ namespace vsd5_1
                 Duration = duration,
                 PlaylistTitle = playlistTitle
             };
+
+            // Daha sonra VideoId'yi atayın.
+            vidData.VideoId = videoKey;
+
 
             ListViewItem item = new ListViewItem();
             item.Tag = vidData;
@@ -992,14 +1005,30 @@ namespace vsd5_1
             }
             public int Compare(object x, object y)
             {
-                VideoItemData dataX = ((ListViewItem)x).Tag as VideoItemData;
-                VideoItemData dataY = ((ListViewItem)y).Tag as VideoItemData;
-                if (dataX == null || dataY == null)
-                    return 0;
-                int result = dataX.Order.CompareTo(dataY.Order);
+                string textX = "";
+                string textY = "";
+                // Eğer VideoItemData ise (listViewYT)
+                if (((ListViewItem)x).Tag is VideoItemData vdataX && ((ListViewItem)y).Tag is VideoItemData vdataY)
+                {
+                    textX = vdataX.Title;
+                    textY = vdataY.Title;
+                }
+                // Eğer DownloadDisplayData ise (listViewLoadYT)
+                else if (((ListViewItem)x).Tag is DownloadDisplayData ddataX && ((ListViewItem)y).Tag is DownloadDisplayData ddataY)
+                {
+                    textX = ddataX.Title;
+                    textY = ddataY.Title;
+                }
+                else
+                {
+                    textX = ((ListViewItem)x).Text;
+                    textY = ((ListViewItem)y).Text;
+                }
+                int result = string.Compare(textX, textY);
                 return order == SortOrder.Ascending ? result : -result;
             }
         }
+
 
         private Image CreateTickImage(bool isChecked)
         {
@@ -1154,7 +1183,7 @@ namespace vsd5_1
                 if (string.IsNullOrEmpty(args)) continue;
 
                 // Resim anahtarı: AddVideoItem'da kullandığın key ile aynı olmalı
-                string imageKey = vdata.VideoUrl; // veya vdata.ID
+                string imageKey = vdata.VideoId; // veya vdata.ID
 
                 var ddd = new DownloadDisplayData
                 {
@@ -1171,6 +1200,7 @@ namespace vsd5_1
                 };
 
                 var dlItem = new ListViewItem { Tag = ddd };
+                dlItem.ImageKey = ddd.ImageKey;
                 listViewLoadYT.Items.Add(dlItem);
 
                 var cts = new CancellationTokenSource();
@@ -1182,7 +1212,11 @@ namespace vsd5_1
                 downloadJobs[dlItem] = job;
                 StartDownload(dlItem, args, job);
             }
-
+            listViewYT.Items.Clear(); // listeyi temizle
+            chkSelectYTAll.Visible = false;
+            cmbYTFormat.Visible = false;
+            cmbYTQuality.Visible = false;
+            btnYTDownload.Visible = false;
             btnYTCancel.Visible = downloadJobs.Count > 0;
             await Task.CompletedTask;
         }
@@ -1310,7 +1344,7 @@ namespace vsd5_1
                 {
                     UpdateDownloadStatus(dlItem, langManager.GetTranslation("completed"));
                     DownloadDisplayData ddd = dlItem.Tag as DownloadDisplayData;
-                    ddd.Title += " (" + langManager.GetTranslation("downloaded") + ")";
+                    // ddd.Title += " (" + langManager.GetTranslation("downloaded") + ")";
                     listViewLoadYT.Invalidate(dlItem.Bounds);
                 }
                 else
@@ -1381,6 +1415,7 @@ namespace vsd5_1
                 kvp.Value.CancellationTokenSource.Cancel();
             downloadJobs.Clear();
             btnYTCancel.Visible = false;
+            listViewLoadYT.Items.Clear(); // listeyi temizle
         }
 
         private void listViewLoadYT_DrawItem(object sender, DrawListViewItemEventArgs e)
@@ -1445,23 +1480,24 @@ namespace vsd5_1
         #endregion
 
         #region CardBox Düzenlemeleri
-        // Madde 3: Pencere yeniden boyutlandığında, ekran daraldıkça card’ları dikeyde hizalayacak şekilde konumlandırma ve Anchor özelliklerini kaldırma
-        private void MainForm_Resize(object sender, EventArgs e)
+        // Bu metod, card’ların tüm layout kodunu barındıracak
+        private void UpdateCardLayout()
         {
+            if (this.WindowState == FormWindowState.Minimized)
+                return;
+
             this.SuspendLayout();
             int gap = 14;
-            int rightGap = 82; // Sağ kenar boşluğu
-            listCard.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
-            loadCard.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
-            compCard.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
+            int rightGap = 82;
+
+            // Örnek: Mevcut kodunuzdan alıntı
             if (this.ClientSize.Width <= 1150)
             {
-                // Madde 3: Küçük ekranda Anchor özelliklerini kaldırıyoruz.
+                // dar ekran ayarları...
                 listCard.Anchor = AnchorStyles.Top;
                 loadCard.Anchor = AnchorStyles.Top;
                 compCard.Anchor = AnchorStyles.Top;
 
-                // Tüm card’ları dikeyde hizala
                 int availableWidth = this.ClientSize.Width - 17 - rightGap;
                 listCard.Width = availableWidth;
                 loadCard.Width = availableWidth;
@@ -1473,6 +1509,7 @@ namespace vsd5_1
             }
             else if (this.ClientSize.Width < 1594)
             {
+                // orta ekran ayarları...
                 compCard.Visible = false;
                 int availableWidth = this.ClientSize.Width - 17 - gap - rightGap;
                 listCard.Width = availableWidth / 2;
@@ -1481,10 +1518,10 @@ namespace vsd5_1
                 loadCard.Location = new Point(listCard.Right + gap, 85);
                 listCard.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
                 loadCard.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
-                compCard.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             }
             else
             {
+                // geniş ekran ayarları...
                 compCard.Visible = true;
                 int availableWidth = this.ClientSize.Width - 17 - 2 * gap - rightGap;
                 int cardWidth = availableWidth / 3;
@@ -1499,6 +1536,21 @@ namespace vsd5_1
                 compCard.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             }
             this.ResumeLayout();
+        }
+
+        // Resize başladığında timer’ı (her resize hareketinde) reset et
+        private void MainForm_Resize(object sender, EventArgs e)
+        {
+            // Her resize çağrısında önceki tick’i iptal edip yeniden başlat
+            resizeTimer.Stop();
+            resizeTimer.Start();
+        }
+
+        // Timer aralık geçince, artık boyutlandırma “durdu” say ve layout’u uygula
+        private void ResizeTimer_Tick(object sender, EventArgs e)
+        {
+            resizeTimer.Stop();
+            UpdateCardLayout();
         }
         #endregion
 
@@ -1583,14 +1635,14 @@ namespace vsd5_1
             // Burada uygulamanızın dil ayarına göre uygun mesajı döndürmelisiniz.
             switch (key)
             {
-                case "missing_libs": return "The following libraries are not installed:\n";
-                case "download_prompt": return "\nIt is required to download. Do you want to download it?\nTHE APPLICATION MAY NOT WORK IF YOU DO NOT DOWNLOAD.";
-                case "warning": return "Warning";
-                case "success": return "Success";
-                case "error": return "Error";
-                case "download_success": return "Download successful: ";
-                case "download_error": return "Download failed: ";
-                case "confirm_exit": return "Are you sure? The download process will be canceled.";
+                case "missing_libs": return langManager.GetTranslation("neededLibMB1");
+                case "download_prompt": return langManager.GetTranslation("neededLibMB2");
+                case "warning": return langManager.GetTranslation("warning");
+                case "success": return langManager.GetTranslation("success");
+                case "error": return langManager.GetTranslation("error");
+                case "download_success": return langManager.GetTranslation("download_success");
+                case "download_error": return langManager.GetTranslation("download_error");
+                case "confirm_exit": return langManager.GetTranslation("confirm_exit");
                 default: return key;
             }
         }
@@ -1894,70 +1946,110 @@ namespace vsd5_1
         }
         #endregion
 
-        private void materialButton3_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("cmbLang eleman sayısı: " + cmbLang.Items.Count);
-
-        }
-
         private void listViewLoadYT_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
         {
             var data = e.Item.Tag as DownloadDisplayData;
             if (data == null) return;
 
-            // Satır boyutu
             Rectangle full = new Rectangle(
                 e.SubItem.Bounds.Left,
                 e.SubItem.Bounds.Top,
                 listViewLoadYT.Columns[0].Width,
                 e.SubItem.Bounds.Height);
 
-            // Arka plan tekrar
-            var bg = e.Item.Selected ? SystemColors.Highlight : listViewLoadYT.BackColor;
-            e.Graphics.FillRectangle(new SolidBrush(bg), full);
+            Color bgColor = e.Item.Selected ? SystemColors.Highlight : listViewLoadYT.BackColor;
+            e.Graphics.FillRectangle(new SolidBrush(bgColor), full);
 
-            int x = full.Left + 5;
-            int y = full.Top + 5;
+            int padding = 5;
+            int x = full.Left + padding;
+            int y = full.Top + padding;
 
-            // 1) Thumbnail (90×50)
-            if (data.Thumbnail != null)
-                e.Graphics.DrawImage(data.Thumbnail, new Rectangle(x, y, 90, 50));
-            x += 100;
+            int thumbWidth = imageListYT.ImageSize.Width;
+            int thumbHeight = imageListYT.ImageSize.Height;
 
-            // Renkler
-            Brush fg = e.Item.Selected ? Brushes.White : Brushes.Black;
-            Brush subFg = e.Item.Selected ? Brushes.LightGray : Brushes.Gray;
+            if (!string.IsNullOrEmpty(e.Item.ImageKey) && imageListYT.Images.ContainsKey(e.Item.ImageKey))
+            {
+                Image thumb = imageListYT.Images[e.Item.ImageKey];
+                Rectangle thumbRect = new Rectangle(x, y, thumbWidth, thumbHeight);
+                e.Graphics.DrawImage(thumb, thumbRect);
+            }
 
-            // 2) Başlık
-            e.Graphics.DrawString(data.Title, new Font("Segoe UI", 10, FontStyle.Bold), fg, x, y);
-            // 3) Kanal
-            e.Graphics.DrawString(data.Channel, new Font("Segoe UI", 9), subFg, x, y + 20);
-            // 4) Kalite
-            e.Graphics.DrawString(data.Quality, new Font("Segoe UI", 9), fg, x, y + 40);
+            x += thumbWidth + padding;
 
-            // 5) ProgressBar sınırı
-            Rectangle barRect = new Rectangle(x, full.Bottom - 20, 200, 10);
-            e.Graphics.DrawRectangle(Pens.Gray, barRect);
-            int w = Math.Max(0, Math.Min(barRect.Width - 2, (barRect.Width - 2) * data.ProgressPercent / 100));
-            e.Graphics.FillRectangle(Brushes.Green, new Rectangle(barRect.Left + 1, barRect.Top + 1, w, barRect.Height - 2));
+            // 🟡 Bu iki değişken en başta tanımlanmalıydı. Hataların sebebi buydu.
+            int cancelWidth = 30;
+            int downloadInfoWidth = 150;
 
-            // 6) Status / Speed / Boyut (alt satırda)
-            string info = $"{data.Status}   {data.Speed}   {data.FileSizeInfo}";
-            e.Graphics.DrawString(info, new Font("Segoe UI", 9), fg, x + 210, y + 20);
+            using (Font titleFont = new Font("Segoe UI", 10, FontStyle.Bold))
+            using (Font textFont = new Font("Segoe UI", 9))
+            {
+                string title = data.Title;
+                string channelInfo = data.Channel;
+                string formatInfo = data.Quality;
 
-            // 7) İptal butonu “X”
-            Rectangle cancelRect = new Rectangle(
-                full.Right - 30,
-                full.Top + (full.Height - 20) / 2,
-                20, 20);
-            e.Graphics.DrawString("X", new Font("Segoe UI", 10, FontStyle.Bold),
-                                  Brushes.Red, cancelRect, new StringFormat
-                                  {
-                                      Alignment = StringAlignment.Center,
-                                      LineAlignment = StringAlignment.Center
-                                  });
+                Size titleSize = TextRenderer.MeasureText(title, titleFont);
+                Size channelSize = TextRenderer.MeasureText(channelInfo, textFont);
+                Size formatSize = TextRenderer.MeasureText(formatInfo, textFont);
+
+                int totalTextHeight = titleSize.Height + channelSize.Height + formatSize.Height + 4;
+                int availableTextWidth = full.Right - (cancelWidth + padding + downloadInfoWidth) - x;
+
+                int textY = y;
+
+                Rectangle titleRect = new Rectangle(x, textY, availableTextWidth, titleSize.Height);
+                TextRenderer.DrawText(e.Graphics, title, titleFont, titleRect, e.Item.ForeColor, TextFormatFlags.Left | TextFormatFlags.EndEllipsis);
+
+                Rectangle channelRect = new Rectangle(x, textY + titleSize.Height + 2, availableTextWidth, channelSize.Height);
+                TextRenderer.DrawText(e.Graphics, channelInfo, textFont, channelRect, e.Item.ForeColor, TextFormatFlags.Left | TextFormatFlags.EndEllipsis);
+
+                Rectangle formatRect = new Rectangle(x, textY + titleSize.Height + channelSize.Height + 4, availableTextWidth, formatSize.Height);
+                TextRenderer.DrawText(e.Graphics, formatInfo, textFont, formatRect, e.Item.ForeColor, TextFormatFlags.Left | TextFormatFlags.EndEllipsis);
+            }
+
+            // Sağ üstte download bilgileri
+            int downloadInfoX = full.Right - (cancelWidth + padding + downloadInfoWidth);
+            int downloadInfoY = full.Top + padding;
+
+            using (Font textFont = new Font("Segoe UI", 9))
+            {
+                string downloadLine1 = $"{data.Speed}   {data.FileSizeInfo}";
+                string downloadLine2 = data.Status;
+
+                Size dLine1Size = TextRenderer.MeasureText(downloadLine1, textFont);
+                Size dLine2Size = TextRenderer.MeasureText(downloadLine2, textFont);
+
+                Rectangle dLine1Rect = new Rectangle(downloadInfoX, downloadInfoY, downloadInfoWidth, dLine1Size.Height);
+                TextRenderer.DrawText(e.Graphics, downloadLine1, textFont, dLine1Rect, e.Item.ForeColor, TextFormatFlags.Right | TextFormatFlags.EndEllipsis);
+
+                Rectangle dLine2Rect = new Rectangle(downloadInfoX, downloadInfoY + dLine1Size.Height, downloadInfoWidth, dLine2Size.Height);
+                TextRenderer.DrawText(e.Graphics, downloadLine2, textFont, dLine2Rect, e.Item.ForeColor, TextFormatFlags.Right | TextFormatFlags.EndEllipsis);
+            }
+
+            // Sağ altta progress bar
+            int progressBarHeight = 8;
+            int progressBarX = downloadInfoX;
+            int progressBarY = full.Bottom - padding - progressBarHeight;
+            Rectangle progressBarRect = new Rectangle(progressBarX, progressBarY, downloadInfoWidth, progressBarHeight);
+            e.Graphics.DrawRectangle(Pens.Gray, progressBarRect);
+
+            int progressWidth = (int)((progressBarRect.Width - 2) * data.ProgressPercent / 100.0);
+            if (progressWidth > 0)
+            {
+                e.Graphics.FillRectangle(Brushes.Green, new Rectangle(progressBarRect.Left + 1, progressBarRect.Top + 1, progressWidth, progressBarRect.Height - 2));
+            }
+
+            // Sağ uçta cancel butonu
+            Rectangle cancelRect = new Rectangle(full.Right - cancelWidth, full.Top + (full.Height - cancelWidth) / 2, cancelWidth, cancelWidth);
+            TextRenderer.DrawText(e.Graphics, "X", new Font("Segoe UI", 10, FontStyle.Bold), cancelRect, Color.Red, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
         }
 
+        private void listViewLoadYT_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            // Sadece tek sütun var; her tıklamada sıralamayı tersine çevirir.
+            sortOrder = sortOrder == SortOrder.Ascending ? SortOrder.Descending : SortOrder.Ascending;
+            listViewLoadYT.ListViewItemSorter = new ListViewItemComparer(e.Column, sortOrder);
+            listViewLoadYT.Sort();
+        }
     }
 
     public class LanguageManager

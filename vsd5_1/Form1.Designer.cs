@@ -77,6 +77,7 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.lblVersion = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.resizeTimer = new System.Windows.Forms.Timer(this.components);
             this.tabControl.SuspendLayout();
             this.ytPage.SuspendLayout();
             this.compCard.SuspendLayout();
@@ -245,6 +246,7 @@
             this.listViewLoadYT.TabIndex = 1;
             this.listViewLoadYT.UseCompatibleStateImageBehavior = false;
             this.listViewLoadYT.View = System.Windows.Forms.View.Details;
+            this.listViewLoadYT.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewLoadYT_ColumnClick);
             this.listViewLoadYT.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.listViewLoadYT_DrawSubItem);
             // 
             // listCard
@@ -319,12 +321,12 @@
             this.btnYTDownload.Depth = 0;
             this.btnYTDownload.HighEmphasis = true;
             this.btnYTDownload.Icon = ((System.Drawing.Image)(resources.GetObject("btnYTDownload.Icon")));
-            this.btnYTDownload.Location = new System.Drawing.Point(434, 434);
+            this.btnYTDownload.Location = new System.Drawing.Point(346, 434);
             this.btnYTDownload.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.btnYTDownload.MouseState = MaterialSkin.MouseState.HOVER;
             this.btnYTDownload.Name = "btnYTDownload";
             this.btnYTDownload.NoAccentTextColor = System.Drawing.Color.Empty;
-            this.btnYTDownload.Size = new System.Drawing.Size(157, 49);
+            this.btnYTDownload.Size = new System.Drawing.Size(245, 49);
             this.btnYTDownload.TabIndex = 8;
             this.btnYTDownload.Text = "İndir";
             this.btnYTDownload.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
@@ -1027,6 +1029,7 @@
         private MaterialSkin.Controls.MaterialRadioButton radioAuto;
         private System.Windows.Forms.ToolStripStatusLabel lblVersion;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+        private System.Windows.Forms.Timer resizeTimer;
     }
 }
 

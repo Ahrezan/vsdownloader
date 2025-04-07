@@ -76,7 +76,7 @@
             this.lblStat1.Name = "lblStat1";
             this.lblStat1.Size = new System.Drawing.Size(309, 14);
             this.lblStat1.TabIndex = 8;
-            this.lblStat1.Text = "Waiting...";
+            this.lblStat1.Text = "File Pending...";
             this.lblStat1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // materialCard1
@@ -111,7 +111,7 @@
             this.lblStat3.Name = "lblStat3";
             this.lblStat3.Size = new System.Drawing.Size(306, 14);
             this.lblStat3.TabIndex = 15;
-            this.lblStat3.Text = "Waiting...";
+            this.lblStat3.Text = "File Pending...";
             this.lblStat3.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // progressBar3
@@ -145,7 +145,7 @@
             this.lblStat2.Name = "lblStat2";
             this.lblStat2.Size = new System.Drawing.Size(309, 14);
             this.lblStat2.TabIndex = 11;
-            this.lblStat2.Text = "Waiting...";
+            this.lblStat2.Text = "File Pending...";
             this.lblStat2.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // progressBar2
@@ -193,7 +193,7 @@
             this.lblDownLib.Name = "lblDownLib";
             this.lblDownLib.Size = new System.Drawing.Size(312, 25);
             this.lblDownLib.TabIndex = 0;
-            this.lblDownLib.Text = "Downloaded Libraries";
+            this.lblDownLib.Text = "Download Libraries";
             this.lblDownLib.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // LibraryDownloadForm
