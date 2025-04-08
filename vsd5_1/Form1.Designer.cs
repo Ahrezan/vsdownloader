@@ -49,6 +49,17 @@
             this.btnLoad = new MaterialSkin.Controls.MaterialFloatingActionButton();
             this.icon = new System.Windows.Forms.ImageList(this.components);
             this.spotPage = new System.Windows.Forms.TabPage();
+            this.materialCard2 = new MaterialSkin.Controls.MaterialCard();
+            this.btnSPCancel = new MaterialSkin.Controls.MaterialButton();
+            this.cmbSPVbr = new MaterialSkin.Controls.MaterialComboBox();
+            this.chkSPSelectAll = new MaterialSkin.Controls.MaterialCheckbox();
+            this.cmbSPQuality = new MaterialSkin.Controls.MaterialComboBox();
+            this.btnSPDownload = new MaterialSkin.Controls.MaterialButton();
+            this.cmbSPFormat = new MaterialSkin.Controls.MaterialComboBox();
+            this.listViewSP = new MaterialSkin.Controls.MaterialListView();
+            this.materialCard1 = new MaterialSkin.Controls.MaterialCard();
+            this.txtSPUrl = new MaterialSkin.Controls.MaterialMaskedTextBox();
+            this.btnSPSearch = new MaterialSkin.Controls.MaterialFloatingActionButton();
             this.settingsPage = new System.Windows.Forms.TabPage();
             this.lblTheme = new MaterialSkin.Controls.MaterialLabel();
             this.lblGeneral = new MaterialSkin.Controls.MaterialLabel();
@@ -84,6 +95,9 @@
             this.loadCard.SuspendLayout();
             this.listCard.SuspendLayout();
             this.searchCard.SuspendLayout();
+            this.spotPage.SuspendLayout();
+            this.materialCard2.SuspendLayout();
+            this.materialCard1.SuspendLayout();
             this.settingsPage.SuspendLayout();
             this.dwnCard.SuspendLayout();
             this.gnrlCard.SuspendLayout();
@@ -466,6 +480,8 @@
             // 
             // spotPage
             // 
+            this.spotPage.Controls.Add(this.materialCard2);
+            this.spotPage.Controls.Add(this.materialCard1);
             this.spotPage.ImageKey = "spotifylogo.png";
             this.spotPage.Location = new System.Drawing.Point(4, 35);
             this.spotPage.Name = "spotPage";
@@ -474,6 +490,307 @@
             this.spotPage.TabIndex = 1;
             this.spotPage.Text = "Spotify";
             this.spotPage.UseVisualStyleBackColor = true;
+            // 
+            // materialCard2
+            // 
+            this.materialCard2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.materialCard2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.materialCard2.Controls.Add(this.btnSPCancel);
+            this.materialCard2.Controls.Add(this.cmbSPVbr);
+            this.materialCard2.Controls.Add(this.chkSPSelectAll);
+            this.materialCard2.Controls.Add(this.cmbSPQuality);
+            this.materialCard2.Controls.Add(this.btnSPDownload);
+            this.materialCard2.Controls.Add(this.cmbSPFormat);
+            this.materialCard2.Controls.Add(this.listViewSP);
+            this.materialCard2.Depth = 0;
+            this.materialCard2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(222)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.materialCard2.Location = new System.Drawing.Point(17, 85);
+            this.materialCard2.Margin = new System.Windows.Forms.Padding(14);
+            this.materialCard2.MouseState = MaterialSkin.MouseState.HOVER;
+            this.materialCard2.Name = "materialCard2";
+            this.materialCard2.Padding = new System.Windows.Forms.Padding(14);
+            this.materialCard2.Size = new System.Drawing.Size(1232, 497);
+            this.materialCard2.TabIndex = 2;
+            // 
+            // btnSPCancel
+            // 
+            this.btnSPCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSPCancel.AutoSize = false;
+            this.btnSPCancel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnSPCancel.BackColor = System.Drawing.Color.Transparent;
+            this.btnSPCancel.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Dense;
+            this.btnSPCancel.Depth = 0;
+            this.btnSPCancel.HighEmphasis = true;
+            this.btnSPCancel.Icon = ((System.Drawing.Image)(resources.GetObject("btnSPCancel.Icon")));
+            this.btnSPCancel.Location = new System.Drawing.Point(752, 434);
+            this.btnSPCancel.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.btnSPCancel.MouseState = MaterialSkin.MouseState.HOVER;
+            this.btnSPCancel.Name = "btnSPCancel";
+            this.btnSPCancel.NoAccentTextColor = System.Drawing.Color.Empty;
+            this.btnSPCancel.Size = new System.Drawing.Size(209, 50);
+            this.btnSPCancel.TabIndex = 13;
+            this.btnSPCancel.Text = "Cancel Downloads";
+            this.btnSPCancel.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
+            this.btnSPCancel.UseAccentColor = true;
+            this.btnSPCancel.UseVisualStyleBackColor = false;
+            this.btnSPCancel.Visible = false;
+            // 
+            // cmbSPVbr
+            // 
+            this.cmbSPVbr.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.cmbSPVbr.AutoResize = false;
+            this.cmbSPVbr.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.cmbSPVbr.Depth = 0;
+            this.cmbSPVbr.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            this.cmbSPVbr.DropDownHeight = 174;
+            this.cmbSPVbr.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbSPVbr.DropDownWidth = 121;
+            this.cmbSPVbr.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Pixel);
+            this.cmbSPVbr.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(222)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.cmbSPVbr.FormattingEnabled = true;
+            this.cmbSPVbr.Hint = "VBR";
+            this.cmbSPVbr.IntegralHeight = false;
+            this.cmbSPVbr.ItemHeight = 43;
+            this.cmbSPVbr.Items.AddRange(new object[] {
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9"});
+            this.cmbSPVbr.Location = new System.Drawing.Point(240, 431);
+            this.cmbSPVbr.MaxDropDownItems = 4;
+            this.cmbSPVbr.MouseState = MaterialSkin.MouseState.OUT;
+            this.cmbSPVbr.Name = "cmbSPVbr";
+            this.cmbSPVbr.Size = new System.Drawing.Size(104, 49);
+            this.cmbSPVbr.StartIndex = 0;
+            this.cmbSPVbr.TabIndex = 12;
+            this.cmbSPVbr.Visible = false;
+            // 
+            // chkSPSelectAll
+            // 
+            this.chkSPSelectAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.chkSPSelectAll.AutoSize = true;
+            this.chkSPSelectAll.Checked = true;
+            this.chkSPSelectAll.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkSPSelectAll.Depth = 0;
+            this.chkSPSelectAll.Location = new System.Drawing.Point(347, 438);
+            this.chkSPSelectAll.Margin = new System.Windows.Forms.Padding(0);
+            this.chkSPSelectAll.MouseLocation = new System.Drawing.Point(-1, -1);
+            this.chkSPSelectAll.MouseState = MaterialSkin.MouseState.HOVER;
+            this.chkSPSelectAll.Name = "chkSPSelectAll";
+            this.chkSPSelectAll.ReadOnly = false;
+            this.chkSPSelectAll.Ripple = true;
+            this.chkSPSelectAll.Size = new System.Drawing.Size(100, 37);
+            this.chkSPSelectAll.TabIndex = 11;
+            this.chkSPSelectAll.Text = "Select All";
+            this.chkSPSelectAll.UseVisualStyleBackColor = true;
+            this.chkSPSelectAll.Visible = false;
+            // 
+            // cmbSPQuality
+            // 
+            this.cmbSPQuality.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.cmbSPQuality.AutoResize = false;
+            this.cmbSPQuality.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.cmbSPQuality.Depth = 0;
+            this.cmbSPQuality.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            this.cmbSPQuality.DropDownHeight = 174;
+            this.cmbSPQuality.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbSPQuality.DropDownWidth = 121;
+            this.cmbSPQuality.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Pixel);
+            this.cmbSPQuality.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(222)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.cmbSPQuality.FormattingEnabled = true;
+            this.cmbSPQuality.Hint = "Quality";
+            this.cmbSPQuality.IntegralHeight = false;
+            this.cmbSPQuality.ItemHeight = 43;
+            this.cmbSPQuality.Items.AddRange(new object[] {
+            "Auto",
+            "Disable",
+            "8k",
+            "16k",
+            "24k",
+            "32k",
+            "40k",
+            "48k",
+            "64k",
+            "80k",
+            "96k",
+            "112k",
+            "128k",
+            "160k",
+            "192k",
+            "224k",
+            "256k",
+            "320k"});
+            this.cmbSPQuality.Location = new System.Drawing.Point(130, 431);
+            this.cmbSPQuality.MaxDropDownItems = 4;
+            this.cmbSPQuality.MouseState = MaterialSkin.MouseState.OUT;
+            this.cmbSPQuality.Name = "cmbSPQuality";
+            this.cmbSPQuality.Size = new System.Drawing.Size(104, 49);
+            this.cmbSPQuality.StartIndex = 0;
+            this.cmbSPQuality.TabIndex = 10;
+            this.cmbSPQuality.Visible = false;
+            // 
+            // btnSPDownload
+            // 
+            this.btnSPDownload.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSPDownload.AutoSize = false;
+            this.btnSPDownload.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnSPDownload.BackColor = System.Drawing.Color.Transparent;
+            this.btnSPDownload.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Dense;
+            this.btnSPDownload.Depth = 0;
+            this.btnSPDownload.HighEmphasis = true;
+            this.btnSPDownload.Icon = ((System.Drawing.Image)(resources.GetObject("btnSPDownload.Icon")));
+            this.btnSPDownload.Location = new System.Drawing.Point(969, 434);
+            this.btnSPDownload.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.btnSPDownload.MouseState = MaterialSkin.MouseState.HOVER;
+            this.btnSPDownload.Name = "btnSPDownload";
+            this.btnSPDownload.NoAccentTextColor = System.Drawing.Color.Empty;
+            this.btnSPDownload.Size = new System.Drawing.Size(245, 49);
+            this.btnSPDownload.TabIndex = 8;
+            this.btnSPDownload.Text = "Download";
+            this.btnSPDownload.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
+            this.btnSPDownload.UseAccentColor = true;
+            this.btnSPDownload.UseVisualStyleBackColor = false;
+            this.btnSPDownload.Visible = false;
+            // 
+            // cmbSPFormat
+            // 
+            this.cmbSPFormat.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.cmbSPFormat.AutoResize = false;
+            this.cmbSPFormat.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.cmbSPFormat.Depth = 0;
+            this.cmbSPFormat.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            this.cmbSPFormat.DropDownHeight = 174;
+            this.cmbSPFormat.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbSPFormat.DropDownWidth = 121;
+            this.cmbSPFormat.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Pixel);
+            this.cmbSPFormat.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(222)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.cmbSPFormat.FormattingEnabled = true;
+            this.cmbSPFormat.Hint = "Format";
+            this.cmbSPFormat.IntegralHeight = false;
+            this.cmbSPFormat.ItemHeight = 43;
+            this.cmbSPFormat.Items.AddRange(new object[] {
+            "MP3",
+            "FLAC",
+            "OGG",
+            "OPUS",
+            "M4A",
+            "WAV"});
+            this.cmbSPFormat.Location = new System.Drawing.Point(20, 431);
+            this.cmbSPFormat.MaxDropDownItems = 4;
+            this.cmbSPFormat.MouseState = MaterialSkin.MouseState.OUT;
+            this.cmbSPFormat.Name = "cmbSPFormat";
+            this.cmbSPFormat.Size = new System.Drawing.Size(104, 49);
+            this.cmbSPFormat.StartIndex = 0;
+            this.cmbSPFormat.TabIndex = 9;
+            this.cmbSPFormat.Visible = false;
+            // 
+            // listViewSP
+            // 
+            this.listViewSP.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.listViewSP.AutoSizeTable = false;
+            this.listViewSP.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.listViewSP.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.listViewSP.Depth = 0;
+            this.listViewSP.FullRowSelect = true;
+            this.listViewSP.HideSelection = false;
+            this.listViewSP.Location = new System.Drawing.Point(17, 17);
+            this.listViewSP.MinimumSize = new System.Drawing.Size(200, 100);
+            this.listViewSP.MouseLocation = new System.Drawing.Point(-1, -1);
+            this.listViewSP.MouseState = MaterialSkin.MouseState.OUT;
+            this.listViewSP.Name = "listViewSP";
+            this.listViewSP.OwnerDraw = true;
+            this.listViewSP.Size = new System.Drawing.Size(1198, 408);
+            this.listViewSP.TabIndex = 1;
+            this.listViewSP.UseCompatibleStateImageBehavior = false;
+            this.listViewSP.View = System.Windows.Forms.View.Details;
+            this.listViewSP.Resize += new System.EventHandler(this.ListViewSP_Resize);
+            // 
+            // materialCard1
+            // 
+            this.materialCard1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.materialCard1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.materialCard1.Controls.Add(this.txtSPUrl);
+            this.materialCard1.Controls.Add(this.btnSPSearch);
+            this.materialCard1.Depth = 0;
+            this.materialCard1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(222)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.materialCard1.Location = new System.Drawing.Point(17, 17);
+            this.materialCard1.Margin = new System.Windows.Forms.Padding(14);
+            this.materialCard1.MouseState = MaterialSkin.MouseState.HOVER;
+            this.materialCard1.Name = "materialCard1";
+            this.materialCard1.Padding = new System.Windows.Forms.Padding(14);
+            this.materialCard1.Size = new System.Drawing.Size(1232, 58);
+            this.materialCard1.TabIndex = 1;
+            // 
+            // txtSPUrl
+            // 
+            this.txtSPUrl.AllowPromptAsInput = true;
+            this.txtSPUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtSPUrl.AnimateReadOnly = false;
+            this.txtSPUrl.AsciiOnly = false;
+            this.txtSPUrl.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.txtSPUrl.BeepOnError = false;
+            this.txtSPUrl.CutCopyMaskFormat = System.Windows.Forms.MaskFormat.IncludeLiterals;
+            this.txtSPUrl.Depth = 0;
+            this.txtSPUrl.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            this.txtSPUrl.HidePromptOnLeave = false;
+            this.txtSPUrl.HideSelection = true;
+            this.txtSPUrl.InsertKeyMode = System.Windows.Forms.InsertKeyMode.Default;
+            this.txtSPUrl.LeadingIcon = null;
+            this.txtSPUrl.Location = new System.Drawing.Point(17, 11);
+            this.txtSPUrl.Mask = "";
+            this.txtSPUrl.MaxLength = 32767;
+            this.txtSPUrl.MouseState = MaterialSkin.MouseState.OUT;
+            this.txtSPUrl.Name = "txtSPUrl";
+            this.txtSPUrl.PasswordChar = '\0';
+            this.txtSPUrl.PrefixSuffixText = null;
+            this.txtSPUrl.PromptChar = '_';
+            this.txtSPUrl.ReadOnly = false;
+            this.txtSPUrl.RejectInputOnFirstFailure = false;
+            this.txtSPUrl.ResetOnPrompt = true;
+            this.txtSPUrl.ResetOnSpace = true;
+            this.txtSPUrl.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.txtSPUrl.SelectedText = "";
+            this.txtSPUrl.SelectionLength = 0;
+            this.txtSPUrl.SelectionStart = 0;
+            this.txtSPUrl.ShortcutsEnabled = true;
+            this.txtSPUrl.Size = new System.Drawing.Size(1145, 36);
+            this.txtSPUrl.SkipLiterals = true;
+            this.txtSPUrl.TabIndex = 1;
+            this.txtSPUrl.TabStop = false;
+            this.txtSPUrl.TextAlign = System.Windows.Forms.HorizontalAlignment.Left;
+            this.txtSPUrl.TextMaskFormat = System.Windows.Forms.MaskFormat.IncludeLiterals;
+            this.txtSPUrl.TrailingIcon = null;
+            this.txtSPUrl.UseSystemPasswordChar = false;
+            this.txtSPUrl.UseTallSize = false;
+            this.txtSPUrl.ValidatingType = null;
+            // 
+            // btnSPSearch
+            // 
+            this.btnSPSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSPSearch.Depth = 0;
+            this.btnSPSearch.Icon = global::vsd5_1.Properties.Resources.search;
+            this.btnSPSearch.ImageKey = "(none)";
+            this.btnSPSearch.ImageList = this.icon;
+            this.btnSPSearch.Location = new System.Drawing.Point(1175, 9);
+            this.btnSPSearch.Mini = true;
+            this.btnSPSearch.MouseState = MaterialSkin.MouseState.HOVER;
+            this.btnSPSearch.Name = "btnSPSearch";
+            this.btnSPSearch.Size = new System.Drawing.Size(40, 40);
+            this.btnSPSearch.TabIndex = 1;
+            this.btnSPSearch.UseVisualStyleBackColor = true;
+            this.btnSPSearch.Click += new System.EventHandler(this.btnSPDownload_Click);
             // 
             // settingsPage
             // 
@@ -490,7 +807,7 @@
             this.settingsPage.Name = "settingsPage";
             this.settingsPage.Size = new System.Drawing.Size(1266, 614);
             this.settingsPage.TabIndex = 2;
-            this.settingsPage.Text = "Ayarlar";
+            this.settingsPage.Text = "Settings";
             this.settingsPage.UseVisualStyleBackColor = true;
             // 
             // lblTheme
@@ -966,6 +1283,10 @@
             this.listCard.ResumeLayout(false);
             this.listCard.PerformLayout();
             this.searchCard.ResumeLayout(false);
+            this.spotPage.ResumeLayout(false);
+            this.materialCard2.ResumeLayout(false);
+            this.materialCard2.PerformLayout();
+            this.materialCard1.ResumeLayout(false);
             this.settingsPage.ResumeLayout(false);
             this.settingsPage.PerformLayout();
             this.dwnCard.ResumeLayout(false);
@@ -1030,6 +1351,17 @@
         private System.Windows.Forms.ToolStripStatusLabel lblVersion;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.Timer resizeTimer;
+        private MaterialSkin.Controls.MaterialCard materialCard2;
+        private MaterialSkin.Controls.MaterialCheckbox chkSPSelectAll;
+        private MaterialSkin.Controls.MaterialComboBox cmbSPQuality;
+        private MaterialSkin.Controls.MaterialButton btnSPDownload;
+        private MaterialSkin.Controls.MaterialComboBox cmbSPFormat;
+        private MaterialSkin.Controls.MaterialListView listViewSP;
+        private MaterialSkin.Controls.MaterialCard materialCard1;
+        private MaterialSkin.Controls.MaterialMaskedTextBox txtSPUrl;
+        private MaterialSkin.Controls.MaterialFloatingActionButton btnSPSearch;
+        private MaterialSkin.Controls.MaterialComboBox cmbSPVbr;
+        private MaterialSkin.Controls.MaterialButton btnSPCancel;
     }
 }
 

@@ -374,6 +374,8 @@ namespace vsd5_1
             downloadSemaphore = new SemaphoreSlim(sliderConcurrent.Value);
 
             settingsChanged = false;
+
+            SetupListViewSP();
         }
 
         #region Ayar Dosyası İşlemleri
@@ -2050,6 +2052,442 @@ namespace vsd5_1
             listViewLoadYT.ListViewItemSorter = new ListViewItemComparer(e.Column, sortOrder);
             listViewLoadYT.Sort();
         }
+
+        #region ListViewSP Tasarımı ve İşlevselliği
+
+        // listViewSP yeniden boyutlandığında sütun genişliklerini yeniler
+        private void ListViewSP_Resize(object sender, EventArgs e)
+        {
+            // Toplam genişliği alalım
+            int totalWidth = listViewSP.ClientSize.Width;
+            // Sabit sütunlar: order (40) + thumbnail (40) + Time (80) = 160px sabit.
+            int fixedWidth = 160;
+            int remaining = totalWidth - fixedWidth;
+            if (remaining < 0) remaining = 0;
+
+            // Dağılım: Title: %50, Info: %25, List: %25
+            int titleWidth = (int)(remaining * 0.5);
+            int infoWidth = (int)(remaining * 0.25);
+            int listWidth = remaining - titleWidth - infoWidth; // kalan
+
+            // Sütun sıralaması: 0:*, 1:#, 2:Title, 3:Info, 4:List, 5:Time
+            if (listViewSP.Columns.Count >= 6)
+            {
+                listViewSP.Columns[0].Width = 40;
+                listViewSP.Columns[1].Width = 40;
+                listViewSP.Columns[2].Width = titleWidth;
+                listViewSP.Columns[3].Width = infoWidth;
+                listViewSP.Columns[4].Width = listWidth;
+                listViewSP.Columns[5].Width = 80;
+            }
+        }
+
+        // Bu method, spotPage’deki listViewSP’yi kurar
+        private void SetupListViewSP()
+        {
+            // listViewSP’nin designer tarafından oluşturulmuş olduğundan emin olun
+            if (listViewSP == null) return;
+
+            listViewSP.OwnerDraw = true;
+            listViewSP.AllowColumnReorder = true;
+            listViewSP.View = View.Details;
+            listViewSP.FullRowSelect = true;
+            listViewSP.CheckBoxes = false;
+            listViewSP.GridLines = true;
+            listViewSP.HeaderStyle = ColumnHeaderStyle.Clickable;
+            listViewSP.BorderStyle = BorderStyle.None;
+
+            // Sütunlar; talimat: sadece * (sıra), # (thumbnail), Title, Info, List, Time
+            // İptal sütunu (btnSPCancel) ayrı kontrol olarak ekleniyor.
+            listViewSP.Columns.Clear();
+
+            // Sabit genişlikte sütunlar: Order ve Thumbnail ile Time (ör. Time için kısa genişlik)
+            listViewSP.Columns.Add("*", 40, HorizontalAlignment.Center); // Order sütunu: sabit 40px
+            listViewSP.Columns.Add("#", 40, HorizontalAlignment.Center); // Thumbnail sütunu: sabit 40px
+
+            // Geri kalan sütunlar (Title, Info, List, Time) otomatik genişlik alacak.
+            // Biz pencere boyutuna göre dinamik hesaplayacağız.
+            listViewSP.Columns.Add("Title", 200, HorizontalAlignment.Left);   // En uzun sütun
+            listViewSP.Columns.Add("Info", 150, HorizontalAlignment.Left);    // Ortalama uzunluk
+            listViewSP.Columns.Add("List", 150, HorizontalAlignment.Left);    // Ortalama uzunluk
+            listViewSP.Columns.Add("Time", 80, HorizontalAlignment.Center);   // Kısa sütun
+
+            // Tema ve font ayarı (diğer listView’lerdeki ayarlarla uyumlu)
+            listViewSP.BackColor = materialSkinManager.Theme == MaterialSkinManager.Themes.DARK
+                                   ? Color.FromArgb(48, 48, 48) : Color.White;
+            listViewSP.ForeColor = materialSkinManager.Theme == MaterialSkinManager.Themes.DARK
+                                   ? Color.White : Color.Black;
+            listViewSP.Font = new Font("Segoe UI", 10);
+
+            // Sütun tıklama olayını bağlayarak sadece Title, List ve Time sütunlarıyla sıralama yapalım
+            listViewSP.ColumnClick += listViewSP_ColumnClick;
+
+            // OwnerDraw eventleri
+            listViewSP.DrawColumnHeader += listViewSP_DrawColumnHeader;
+            listViewSP.DrawItem += listViewSP_DrawItem;
+            listViewSP.DrawSubItem += listViewSP_DrawSubItem;
+
+            // Pencere boyutu değişince sütun genişliklerini yeniden hesaplayacak methodu bağlayın
+            listViewSP.Resize += ListViewSP_Resize;
+        }
+
+
+        // Sütun başlıklarının çizimi (temaya uygun renk)
+        private void listViewSP_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
+        {
+            using (SolidBrush brush = new SolidBrush(materialSkinManager.ColorScheme.PrimaryColor))
+            {
+                e.Graphics.FillRectangle(brush, e.Bounds);
+            }
+            TextRenderer.DrawText(e.Graphics, e.Header.Text, e.Font, e.Bounds,
+                Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+        }
+
+        // Satırın temel çizimini default bırakıyoruz (subitem’larda özel çizim yapıyoruz)
+        private void listViewSP_DrawItem(object sender, DrawListViewItemEventArgs e)
+        {
+            e.DrawDefault = true;
+        }
+
+        // Her bir sütun (subitem) için özel çizim işlemi
+        private void listViewSP_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
+        {
+            Color bgColor = e.Item.Selected ? SystemColors.Highlight : listViewSP.BackColor;
+            e.Graphics.FillRectangle(new SolidBrush(bgColor), e.Bounds);
+
+            // listViewSP.Items[i].Tag olarak SPItemData sınıfından veri atandığını varsayıyoruz
+            SPItemData data = e.Item.Tag as SPItemData;
+            if (data == null)
+            {
+                TextRenderer.DrawText(e.Graphics, e.SubItem.Text, e.Item.Font, e.Bounds, e.Item.ForeColor);
+                return;
+            }
+            switch (e.ColumnIndex)
+            {
+                case 1: // Thumbnail sütunu: resim varsa
+                    if (data.Thumbnail != null)
+                    {
+                        Rectangle imgRect = new Rectangle(e.Bounds.X + 5, e.Bounds.Y + 5,
+                            e.Bounds.Height - 10, e.Bounds.Height - 10);
+                        e.Graphics.DrawImage(data.Thumbnail, imgRect);
+                    }
+                    break;
+                case 2: // Title sütunu: şarkı başlığı
+                    TextRenderer.DrawText(e.Graphics, data.Title, e.Item.Font, e.Bounds,
+                        e.Item.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.Left);
+                    break;
+                case 3: // Info sütunu: örn. Albüm veya sanatçı bilgisi
+                    TextRenderer.DrawText(e.Graphics, data.Info, e.Item.Font, e.Bounds,
+                        e.Item.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.Left);
+                    break;
+                case 4: // List sütunu: Genre, yıl veya sıra bilgisi
+                    TextRenderer.DrawText(e.Graphics, data.ListInfo, e.Item.Font, e.Bounds,
+                        e.Item.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.Left);
+                    break;
+                case 5: // Duration sütunu: şarkı süresi, ortada çarpı (✕) ikonu ekle
+                    TextRenderer.DrawText(e.Graphics, data.Duration, e.Item.Font, e.Bounds,
+                        e.Item.ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                    using (Font crossFont = new Font("Segoe UI", 12, FontStyle.Bold))
+                    {
+                        TextRenderer.DrawText(e.Graphics, "✕", crossFont, e.Bounds,
+                            Color.FromArgb(100, Color.Red), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                    }
+                    break;
+                case 6: // İptal (X) sütunu: seçili satır için iptal ikonu
+                    if (data.ShowCancelButton)
+                    {
+                        Image cancelIcon = GetCancelIcon();
+                        if (cancelIcon != null)
+                        {
+                            Rectangle iconRect = new Rectangle(
+                                e.Bounds.X + (e.Bounds.Width - 16) / 2,
+                                e.Bounds.Y + (e.Bounds.Height - 16) / 2,
+                                16, 16);
+                            e.Graphics.DrawImage(cancelIcon, iconRect);
+                        }
+                    }
+                    break;
+            }
+        }
+
+        // Sütun tıklama olayı: örneğin Title, List veya Time sütunlarına tıklanırsa sıralama yapılır
+        private int spSortColumn = -1;
+        private SortOrder spSortOrder = SortOrder.Ascending;
+        private void listViewSP_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            // Burada yalnızca Title (sütun 2), List (4) ve Time (5) için sıralama yapıyoruz.
+            if (e.Column == 2 || e.Column == 4 || e.Column == 5)
+            {
+                if (e.Column == spSortColumn)
+                    spSortOrder = spSortOrder == SortOrder.Ascending ? SortOrder.Descending : SortOrder.Ascending;
+                else
+                {
+                    spSortColumn = e.Column;
+                    spSortOrder = SortOrder.Ascending;
+                }
+                listViewSP.ListViewItemSorter = new ListViewItemComparerSP(e.Column, spSortOrder);
+                listViewSP.Sort();
+            }
+        }
+
+        // ListViewItemComparer sınıfı; SPItemData üzerinde karşılaştırma yapar
+        public class ListViewItemComparerSP : System.Collections.IComparer
+        {
+            private int col;
+            private SortOrder order;
+            public ListViewItemComparerSP(int column, SortOrder order)
+            {
+                col = column;
+                this.order = order;
+            }
+            public int Compare(object x, object y)
+            {
+                SPItemData dataX = (x as ListViewItem)?.Tag as SPItemData;
+                SPItemData dataY = (y as ListViewItem)?.Tag as SPItemData;
+                string txtX = "", txtY = "";
+                if (dataX != null && dataY != null)
+                {
+                    if (col == 2)
+                    {
+                        txtX = dataX.Title;
+                        txtY = dataY.Title;
+                    }
+                    else if (col == 4)
+                    {
+                        txtX = dataX.ListInfo;
+                        txtY = dataY.ListInfo;
+                    }
+                    else if (col == 5)
+                    {
+                        // Süre kıyaslaması; örneğin "3:45" formatını saniyeye çevirir
+                        double d1 = ParseDurationToSeconds(dataX.Duration);
+                        double d2 = ParseDurationToSeconds(dataY.Duration);
+                        return order == SortOrder.Ascending ? d1.CompareTo(d2) : d2.CompareTo(d1);
+                    }
+                }
+                int result = string.Compare(txtX, txtY);
+                return order == SortOrder.Ascending ? result : -result;
+            }
+        }
+
+        // Yardımcı metot: "mm:ss" veya "hh:mm:ss" formatındaki süreyi saniyeye çevirir
+        private static double ParseDurationToSeconds(string duration)
+        {
+            double seconds = 0;
+            string[] parts = duration.Split(':');
+            if (parts.Length == 2 &&
+                int.TryParse(parts[0], out int minutes) &&
+                int.TryParse(parts[1], out int secs))
+            {
+                seconds = minutes * 60 + secs;
+            }
+            else if (parts.Length == 3 &&
+                int.TryParse(parts[0], out int hours) &&
+                int.TryParse(parts[1], out minutes) &&
+                int.TryParse(parts[2], out secs))
+            {
+                seconds = hours * 3600 + minutes * 60 + secs;
+            }
+            return seconds;
+        }
+
+        // SP (Spotify) için listViewSP’de kullanılacak satır verilerini tutan sınıf
+        public class SPItemData
+        {
+            public int Order { get; set; }
+            public Image Thumbnail { get; set; }
+            public string Url { get; set; }
+            public string Title { get; set; }
+            public string Info { get; set; }      // Örneğin; "Albüm: …" veya "Sanatçılar: …"
+            public string ListInfo { get; set; }    // Örneğin; Genre veya liste sırası
+            public string Duration { get; set; }    // Örneğin; "3:45"
+            public bool ShowCancelButton { get; set; } // İndirme başladıysa true
+        }
+
+        // İptal ikonu (X) için örnek metot; resources ya da dinamik çizim kullanılabilir.
+        private Image GetCancelIcon()
+        {
+            Bitmap bmp = new Bitmap(16, 16);
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.Clear(Color.Transparent);
+                using (Pen pen = new Pen(Color.Red, 2))
+                {
+                    g.DrawLine(pen, 2, 2, 14, 14);
+                    g.DrawLine(pen, 14, 2, 2, 14);
+                }
+            }
+            return bmp;
+        }
+
+        #endregion
+
+        #region Arama ve İndirme İşlemleri
+
+        // btnSPSearch tıklandığında; txtSPUrl’den arama yapılır ve listViewSP’ye veriler eklenir
+        private void btnSPSearch_Click(object sender, EventArgs e)
+        {
+            string query = txtSPUrl.Text.Trim();
+            if (string.IsNullOrEmpty(query))
+            {
+                MessageBox.Show("Lütfen bir şarkı adı veya link giriniz!", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            listViewSP.Items.Clear();
+
+            // Gerçek arama: spotdl.exe ile "search" komutunu çalıştırıyoruz
+            string spotDlPath = Path.Combine(Application.StartupPath, "libs", "spotdl.exe");
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = spotDlPath,
+                Arguments = $"search \"{query}\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+            try
+            {
+                using (Process process = new Process())
+                {
+                    process.StartInfo = psi;
+                    process.Start();
+                    string output = process.StandardOutput.ReadToEnd();
+                    process.WaitForExit();
+
+                    var lines = output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    int orderCounter = 1;
+                    foreach (var line in lines)
+                    {
+                        if (line.Contains("https://"))
+                        {
+                            // Örnek satır biçimi: "Numb - Linkin Park - https://open.spotify.com/track/..."
+                            string[] parts = line.Split(new[] { " - " }, StringSplitOptions.None);
+                            if (parts.Length >= 3)
+                            {
+                                SPItemData data = new SPItemData()
+                                {
+                                    Order = orderCounter++,
+                                    Title = parts[0].Trim() + " - " + parts[1].Trim(),
+                                    Url = parts[2].Trim(),
+                                    // Diğer alanlar (Info, Duration, Thumbnail vb.) gerektiği şekilde doldurulabilir.
+                                };
+                                ListViewItem item = new ListViewItem();
+                                // Burada Order sütunu "#<order>" formatında yazılıyor.
+                                item.SubItems.Add("#" + data.Order.ToString());
+                                item.SubItems.Add(""); // Thumbnail sütunu (özelleştirilebilir)
+                                item.SubItems.Add(data.Title);
+                                item.SubItems.Add(data.Info);
+                                item.SubItems.Add(data.ListInfo);
+                                item.SubItems.Add(data.Duration);
+                                item.Tag = data;
+                                listViewSP.Items.Add(item);
+                            }
+                        }
+                    }
+                    // Eğer sonuç bulunamadıysa, kullanıcıya bilgi veriyoruz.
+                    if (listViewSP.Items.Count == 0)
+                    {
+                        MessageBox.Show("Aradığınız şarkı bulunamadı, lütfen aramanızı kontrol ediniz.", "Bilgi", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Spotify araması yapılırken hata: " + ex.Message, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            // İlgili indirme kontrollerini, sonuç varsa, görünür yapıyoruz.
+            bool hasResults = (listViewSP.Items.Count > 0);
+            cmbSPFormat.Visible = hasResults;
+            cmbSPQuality.Visible = hasResults;
+            cmbSPVbr.Visible = hasResults;
+            chkSPSelectAll.Visible = hasResults;
+            btnSPDownload.Visible = hasResults;
+        }
+
+        // Örnek: Şarkı için sabit thumbnail resmi üreten metot
+        private Image GetSampleThumbnail()
+        {
+            Bitmap bmp = new Bitmap(60, 40);
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.Clear(Color.DarkGray);
+                TextRenderer.DrawText(g, "img", new Font("Segoe UI", 8),
+                    new Rectangle(0, 0, bmp.Width, bmp.Height),
+                    Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            }
+            return bmp;
+        }
+
+        // btnSPDownload tıklandığında; listViewSP’deki seçili şarkılar için indirme işlemini başlatır.
+        // Format, kalite, VBR ve dosya yolu ayarlarını cmbSPFormat, cmbSPQuality, cmbSPVbr, txtPath üzerinden alır.
+        private void btnSPDownload_Click(object sender, EventArgs e)
+        {
+            if (listViewSP.Items.Count == 0)
+            {
+                MessageBox.Show("İndirme başlatılırken: Listede geçerli şarkı bulunamadı. Lütfen önce arama yapınız.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            List<SPItemData> selectedItems = new List<SPItemData>();
+            foreach (ListViewItem item in listViewSP.Items)
+            {
+                if (item.Tag is SPItemData data)
+                    selectedItems.Add(data);
+            }
+            if (selectedItems.Count == 0)
+            {
+                MessageBox.Show("Seçili şarkı bulunamadı!", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string format = cmbSPFormat.SelectedItem?.ToString() ?? "mp3";
+            string quality = cmbSPQuality.SelectedItem?.ToString() ?? "320";
+            string vbr = cmbSPVbr.SelectedItem?.ToString() ?? "default";
+            string ffmpegPath = Path.Combine(Application.StartupPath, "libs", "ffmpeg.exe");
+            string spotDlPath = Path.Combine(Application.StartupPath, "libs", "spotdl.exe");
+
+            foreach (var song in selectedItems)
+            {
+                string outputPath = Path.Combine(txtPath.Text, song.Title + "." + format);
+                string arguments = $"\"{song.Title}\" --format {format} --quality {quality} --vbr {vbr} --ffmpeg \"{ffmpegPath}\" -o \"{outputPath}\"";
+                try
+                {
+                    ProcessStartInfo psi = new ProcessStartInfo
+                    {
+                        FileName = spotDlPath,
+                        Arguments = arguments,
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true
+                    };
+                    using (Process process = new Process())
+                    {
+                        process.StartInfo = psi;
+                        process.Start();
+                        string output = process.StandardOutput.ReadToEnd();
+                        string error = process.StandardError.ReadToEnd();
+                        process.WaitForExit();
+
+                        if (!string.IsNullOrWhiteSpace(error))
+                        {
+                            MessageBox.Show("Hata:\n" + error, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        else
+                        {
+                            MessageBox.Show("İndirme başarılı:\n" + output, "Bilgi", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("İndirme başlatılırken hata: " + ex.Message, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        #endregion
     }
 
     public class LanguageManager
