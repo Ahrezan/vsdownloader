@@ -12,7 +12,7 @@ Note: This is my first project. If there are any mistakes or errors, please excu
 
 | File        | Description                      |
 |-------------|-----------------------------------------|
-| [![Download](https://img.shields.io/badge/İndir-v0.2.7--alpha-blue)](https://github.com/Ahrezan/vsdownloader/releases/download/v0.2.7-alpha/VSDSetup-0_2_7-alpha.exe) | Latest (Alpha) version |
+| [![Download](https://img.shields.io/badge/İndir-Latest-blue)](https://github.com/Ahrezan/vsdownloader/releases/download/v0.3.0-alpha/VSDSetup-0_3_0-alpha.exe) | Latest (Alpha) version |
 
 VSDownloader 5.1 is a free and open-source application designed for downloading audio and video content from platforms like YouTube and Spotify. Currently, the Spotify functionality is under development. This tool provides a user-friendly interface with a range of customizable features, making it easy for users to download content in various formats and quality options.
 
